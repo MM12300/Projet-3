@@ -73,8 +73,6 @@ if (isset($_POST) && !empty($_POST)) {
         $query->execute();
 
 
-
-
         //AFFICHAGE DE TOUS LES MESSAGES
         //Requête SQL
         $sql = 'SELECT `messages`.*,
@@ -154,7 +152,7 @@ if (isset($_POST) && !empty($_POST)) {
                     <input type="file" name="image" id="image">
                 </div>
                 <h2>Catégories</h2>
-                <!-- menu select des messages -->
+                <!-- menu select des catégories-->
                 <label for="categories">Catégories</label>
                 <select id="categories" name="categories">
                     <?php foreach ($categories as $categorie) : ?>
