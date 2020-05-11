@@ -30,5 +30,6 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     //On redirige vers la page art_admin
     header('Location: index.php');
 } else {
-    header('Location: index.php');
+    //header('Location: index.php');
+    echo "message d'erreur";
 }
