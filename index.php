@@ -1,6 +1,6 @@
 <!-- Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog -->
 
-PHP : 
+<!-- PHP : 
 - READ : collect categorie information to display in the form/select 
 - FORM : checking/security
     - CREATE : new input in `messages`  `messages_categories`
@@ -9,7 +9,7 @@ PHP :
 
 HTML :
 - #add-mess : FORM for user
-- #display-mess : Show all from `messages` with `messages_categories`
+- #display-mess : Show all from `messages` with `messages_categories` -->
 
 
 
@@ -23,22 +23,23 @@ $sql = 'SELECT * FROM `categories` ORDER BY `name` ASC;';
 $query = $db->query($sql); //Query method
 $categories = $query->fetchALl(PDO::FETCH_ASSOC);
 
-//***** READ - 
-        //Requête SQL
-        $sql = 'SELECT `messages`.*,
-        GROUP_CONCAT(`categories`.`name`) as categorie_name
-        FROM `messages`
-        LEFT JOIN `messages_categories`
-        ON `messages`.`id` = `messages_categories`.`messages_id`
-        LEFT JOIN `categories`
-        ON `messages_categories`.`categories_id` = `categories`.`id`
-        GROUP BY `messages`.`id`
-        ORDER BY `created_at` DESC;';
-        $query = $db->query($sql);
-        $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 
-        //DB CLOSE
-        require_once('inc/close.php');
+
+//***** READ - 
+//Requête SQL
+$sql = 'SELECT `messages`.*,
+GROUP_CONCAT(`categories`.`name`) as categorie_name
+FROM `messages`
+LEFT JOIN `messages_categories`
+ON `messages`.`id` = `messages_categories`.`messages_id`
+LEFT JOIN `categories`
+ON `messages_categories`.`categories_id` = `categories`.`id`
+GROUP BY `messages`.`id`
+ORDER BY `created_at` DESC;';
+$query = $db->query($sql);
+$messages = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        
 
 
 //$_POST checking
@@ -71,6 +72,9 @@ if (isset($_POST) && !empty($_POST)) {
         $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
         $query->execute();
         
+
+        header('Location: index.php');
+
     } else {
         //On affiche un warning si l'utilisateur n'a pas remplis le formulaire
         //les images ne seront par obligatoires
@@ -129,29 +133,24 @@ if (isset($_POST) && !empty($_POST)) {
             <article>
                 <h2>
                     <!-- TITRE DE l'ARRTICLE AVEC UN LIEN -->
-                    <a href="message.php?id=<?= $message['id'] ?>"> <?= $message['title'] ?></a></h2>
-                    <a href="">Modifier</a> 
-                    <a href="">Supprimer</a>
+                    <a><?= $message['title'] ?></a></h2>
+                    <a href="mess_modif.php?id=<?= $message['id'] ?>">Modifier</a> 
+                    <a href="mess_suppr.php?id=<?= $message['id'] ?>">Supprimer</a>
                 <div>
                     <p>
                         <!-- DATE DE PUBLICATION-->
                         Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
                         dans
                         <?php
-                        //Notre GROUP_CONCAT crée un string : cat1, cat2, cat3 etc...
                         $categories = explode(',', $message['categorie_name']);
-                        //Explode : On transforme ce string en tableau, chaque ligne du tableau apres les ","
-                        
+                        //Explode : transform string into an array after each ','                        
                         foreach ($categories as $categorie) {
-                            //On fait une boucle qui affiche un lien pour chaque catégorie
                             echo '<a href="#">' . $categorie . '</a> ';
                         }
                         ?>
                     </p>
                 </div>
-                <!-- ON AFFICHE UNIQUEMENT UN EXTRAIT DE CHAQUE message-->
                 <div><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
-
             </article>
         <?php endforeach; ?>
 
