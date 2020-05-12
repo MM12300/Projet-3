@@ -102,11 +102,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-            $title = strip_tags($message['title']);
-            $content = strip_tags($message['content']);
+            $title = strip_tags($_POST['titre']);
+            $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
 
-            
             //**************** On met à jour la BDD : Articles
             //Requête SQL
             $sql = 'UPDATE `messages` SET `title` = :title, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';

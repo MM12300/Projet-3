@@ -1,65 +1,38 @@
 <?php
-
 require_once('inc/connect.php');
-$sql = 'SELECT * FROM `categories` ORDER BY `name`ASC;';
+$sql = 'SELECT * FROM `categories` ORDER BY `name` ASC;';
 $query = $db->query($sql);
 $categories = $query->fetchALl(PDO::FETCH_ASSOC);
 
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $id = strip_tags($_GET['id']);
-
-    $sql = 'SELECT * FROM `articles` WHERE `id` = :id;';
-
-    //Requête préparée
+    $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
     $query = $db->prepare($sql);
-
-    //On injecte les valeurs
     $query->bindValue(':id', $id, PDO::PARAM_INT);
-
-    //On éxécute la requête
     $query->execute();
+    $message = $query->fetch(PDO::FETCH_ASSOC);
 
-    //On récupère les données
-    $article = $query->fetch(PDO::FETCH_ASSOC);
-
-    //Si l'article' n'existe pas
-    if (!$article) {
-        echo 'L\'article n\'existe pas';
-        header('Location: admin_articles.php');
+    if (!$message) {
+        echo "Le message n'existe pas";
     }
 
     //******** SI L'ARTICLE EXISTE ON VA CHERCHER SA CATEGORIE DANS LA TABLE article.categorie
 
-    //Requête SQL
-    $sql = 'SELECT * FROM `articles_categories` WHERE `articles_id` = :id;';
-    //On a une variable donc on utilise une requête préparée
+    $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
     $query = $db->prepare($sql);
-
-    //On injecte les valeurs
     $query->bindValue(':id', $id, PDO::PARAM_INT);
-
-    //On éxécute la requête
     $query->execute();
-
-    //On stocke la ligne dans une variable $categoriesArticle
     $categoriesArticle = $query->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    header('location: admin_articles.php');
+    echo "erreur GET is not set "
 }
 
 //**********ON VÉRIFIE SI ON A DES MODIFICATIONS DANS LE FORMULAIRE */
-if (isset($_POST) && !empty($_POST)) {
-    //On vérifie si le formulaire est bien ENVOYÉ
-
-    //On charge la librarie qui contient verifForm
     require_once('inc/lib.php');
-    //On vérifie sur le formulaire est bien REMPLIS
-
-    //**********ON RECUPÈRE LES VALEURS MODIFIÉS DANS LE FORM : Titre et contenu */
     if (verifForm($_POST, ['titre_modif', 'contenu_modif'])) {
         //On récupère les nouveaux éléments et on les nettoie
-        $newTitre = strip_tags($_POST['titre_modif']);
-        $newContenu = strip_tags($_POST['contenu_modif']);
+        $newTitre = strip_tags($_POST['titre']);
+        $newContenu = strip_tags($_POST['contenu']);
 
         //***********On vérifie si on a une IMAGE */
         //on récupère le nom de l'image dans notre BDD
@@ -211,58 +184,55 @@ require_once('inc/close.php');
 
 
 
-<!DOCTYPE html>
-<html lang="fr">
+
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier un article</title>
+    <title>Expression libre</title>
 </head>
 
 <body>
-    <!-- On veut afficher un formulaire pour modifier le contenu des articles
-    Il faut aussi pré-afficher l'ancien contenu des articles -->
-    <h1>Modifier un article</h1>
-    <form method="post" enctype="multipart/form-data">
-    <!-- //METHOD POST POUR LE FORMULAIRE
-    //ENCTYPE POUR UPLOAD D'IMAGE -->
-        <div>
-            <div>
-                <label for="nom">Titre de l'article</label>
-                <input type="text" id="titre" name="titre_modif" value="<?= $article['title'] ?>">
-            </div>
-            <div>
-                <label for="nom">Contenu de l'article</label>
-                <textarea type="text" id="contenu" name="contenu_modif"><?= $article['content'] ?></textarea>
-            </div>
-            <h2>images</h2>
-            <div><label for="image"> Image :</label>
-                <input type="file" name="image" id="image">
-            </div>
-            
-            <h2>Catégories</h2>
-            <?php
-            foreach ($categories as $categorie) :
-                //On va vérifier si la catégorie qu'on affiche doit être coché
-                $checked = '';
-                foreach ($categoriesArticle as $cat) {
-                    if ($cat['categories_id'] == $categorie['id']) {
-                        $checked = 'checked';
-                    }
-                }
-
-                //AUTRE METHODE : CONDITION TERNAIRE
-                //$checked = ($cat['categories_id'] == $categorie['id']) ? 'checked' : '' ;
-            ?>
+    <main>
+        <!-- Input to  `messages` -->
+        <section id="add-mess">
+            <h1>Ajouter un message</h1>
+            <form method="post" enctype="multipart/form-data">
                 <div>
-                    <input type="checkbox" name="categories[]" id="cat_<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?= $checked ?>>
-                    <label for="cat_<?= $categorie['id'] ?>"> <?= $categorie['name'] ?></label>
+                    <label for="titre">Titre : </label>
+                    <input type="text" id="titre" name="titre" value="<?= $title ?>">
                 </div>
-
-            <?php endforeach; ?>
-
-        </div>
+                <div>
+                    <label for="contenu">Contenu : </label>
+                    <textarea name="contenu" id="contenu"><?= $content ?></textarea>
+                </div>
+                <h2>Image</h2>
+                <div>
+                    <label for="image"> Image :</label>
+                    <input type="file" name="image" id="image">
+                </div>
+                <h2>Catégories</h2>
+                <!-- SELECT MENU FROM `categories`-->
+                <label for="categories">Catégories</label>
+                <select id="categories" name="categories">
+                    <!-- Creating a list of categories  -->
+                    <?php foreach ($categories as $categorie) : ?>
+                    <div>
+                        <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                    </div>
+                    <?php endforeach; ?>
+                </select>
+                <button>
+                    <?php if(!$message){
+                echo "Ajouter le message";
+                    }else{
+                echo "Modifier le message";
+                    };
+                    ?>
+                    
+                </button>
+            </form>
+        </section>
         <button>Modifier l'article</button>
     </form>
 
