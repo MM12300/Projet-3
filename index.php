@@ -29,7 +29,6 @@ $query = $db->query($sql); //Query method
 $categories = $query->fetchALl(PDO::FETCH_ASSOC);
 
 
-
 //***** READ - */
 //Requête SQL
 $sql = 'SELECT `messages`.*,
@@ -43,6 +42,9 @@ GROUP BY `messages`.`id`
 ORDER BY `created_at` DESC;';
 $query = $db->query($sql);
 $messages = $query->fetchAll(PDO::FETCH_ASSOC);
+
+
+
 
         
 //***** DELETE -  */
@@ -59,7 +61,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         echo "le message que vous voulez supprimer n'existe pas";
     }
 
-    //Removing in categories from the linked table `messages_categories`
+        //Removing in categories from the linked table `messages_categories`
     $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
     $query = $db->prepare($sql);
     $query->bindValue(':id', $id, PDO::PARAM_INT);
@@ -83,6 +85,10 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 // }
 
 
+
+
+
+
 //***** UPDATE - */
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     //Checking if the messages exists
@@ -93,12 +99,27 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $query->execute();
     $message = $query->fetch(PDO::FETCH_ASSOC);
 
-    $title= $message[ 'title'];
+    $title= $message['title'];
     $content = $message['content'];
     if (!$message) {
         //header('Location: index.php');
         echo "le message que vous voulez modifier n'existe pas";
     };
+
+    //If message exists we want to know its category
+    $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
+    $query = $db->prepare($sql);
+    $query->bindValue(':id', $id, PDO::PARAM_INT);
+    $query->execute();
+    $message_cat = $query->fetch(PDO::FETCH_ASSOC);
+
+    //die(var_dump($message_cat['messages_id']));
+
+    $selected="";
+    if ($message_cat['messages_id'] == $message['id']){
+        $selected='selected';
+    }
+    
 
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
@@ -106,7 +127,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
 
-            //**************** On met à jour la BDD : Articles
+            //**************** On met à jour la BDD : Messages
             //Requête SQL
             $sql = 'UPDATE `messages` SET `title` = :title, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
             $query = $db->prepare($sql);
@@ -118,11 +139,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 
             //****************On met à jour la BDD articles_categories
-            //On efface d'abord toutes les catégories associées à cet article
+            //On efface d'abord toutes les catégories associées à cet message
             //Puis on les écris à nouveau
 
             //Requête SQL
-            $sql = 'DELETE FROM `articles_categories` WHERE `articles_id` = :id;';
+            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
             $query = $db->prepare($sql);
             $query->bindvalue(':id', $id, PDO::PARAM_INT);
             //On éxécute la requête
@@ -131,14 +152,21 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             //On récupère dans $_POST les catégories qui sont cochées
             $category = $_POST['categories'];
             //On ajoute les catégories
-            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idarticle, :idcategorie);';
+            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
             $query = $db->prepare($sql);
-            $query->bindValue(':idarticle', $id, PDO::PARAM_INT);
+            $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
             $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);     
             $query->execute();
             } 
+
+
+
             header('Location: index.php');
     }     
+
+
+
+    //***** CREATE - `messages`
 }else{
     if (isset($_POST) && !empty($_POST)) {
         //verifForm => $_POST input/select checking
@@ -148,7 +176,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
             $categories = strip_tags($_POST['categories']);
     
-            //***** CREATE - `messages`
+            
             $sql = 'INSERT INTO `messages` (`title`,`content`, `users_id`) VALUES (:titre, :contenu, :user_id);';
             $query = $db->prepare($sql); //Prepare method
             $query->bindValue(':titre', $titre, PDO::PARAM_STR);
@@ -178,25 +206,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ?>
 
@@ -232,7 +241,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <h2>Catégories</h2>
                 <!-- SELECT MENU FROM `categories`-->
                 <label for="categories">Catégories</label>
-                <select id="categories" name="categories">
+                <!-- Need to know which category has the message when updating it -->
+                <?php 
+                
+                ?>
+                
+                <select id="categories" name="categories" <?= $selected?> >
                     <!-- Creating a list of categories  -->
                     <?php foreach ($categories as $categorie) : ?>
                     <div>
@@ -241,6 +255,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     <?php endforeach; ?>
                 </select>
                 <button>
+                    <!-- change the button if post a new message or update an old one -->
                     <?php if(!$message){
                 echo "Ajouter le message";
                     }else{
@@ -254,15 +269,15 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
         <?php foreach ($messages as $message) : ?>
-            <article>
+            <section>
                 <h2>
-                    <!-- TITRE DE l'ARRTICLE AVEC UN LIEN -->
+                    <!-- BUTTONS & TITLE -->
                     <a><?= $message['title'] ?></a></h2>
                     <a href="index.php?edit=<?= $message['id'] ?>">Modifier</a> 
                     <a href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
                 <div>
                     <p>
-                        <!-- DATE DE PUBLICATION-->
+                        <!-- DATE & CATEGORIES -->
                         Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
                         dans
                         <?php
@@ -275,7 +290,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     </p>
                 </div>
                 <div><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
-            </article>
+            </section>
         <?php endforeach; ?>
 
         </section>
