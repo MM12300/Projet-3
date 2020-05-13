@@ -143,6 +143,26 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $title = strip_tags($_POST['titre']);
             $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
+            
+
+            //DELETING OLD IMAGES
+            if ($message['featured_image'] != null) {
+                $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+
+                //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
+                $fichiers = scandir(__DIR__ . '/uploads/');
+
+                //On boucle sur les fichier scar c'est un tableau
+                foreach ($fichiers as $fichier) {
+                    //Si le nom du fichier commence par la même chose que celle du fichier précédemment uploadé ($debutnom), alors on le supprime.
+                    //strpos renvoit 0 si les deux STR comparés ont le mm début
+                    if (strpos($fichier, $debutNom) === 0) {
+                        // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
+                        unlink(__DIR__ . '/uploads/' . $fichier);
+                    }
+                }
+            }
+
 
             //IMAGES HANDELING - JPEG AND PNG ONLY
             if (isset($_FILES) && !empty($_FILES)) {
@@ -177,23 +197,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 }
             }
 
-            //DELETING OLD IMAGES
-            if ($message['featured_image'] != null) {
-                $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-
-                //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
-                $fichiers = scandir(__DIR__ . '/uploads/');
-
-                //On boucle sur les fichier scar c'est un tableau
-                foreach ($fichiers as $fichier) {
-                    //Si le nom du fichier commence par la même chose que celle du fichier précédemment uploadé ($debutnom), alors on le supprime.
-                    //strpos renvoit 0 si les deux STR comparés ont le mm début
-                    if (strpos($fichier, $debutNom) === 0) {
-                        // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
-                        unlink(__DIR__ . '/uploads/' . $fichier);
-                    }
-                }
-            }
+            
 
 
             //**************** On met à jour la BDD : Messages
@@ -391,6 +395,24 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     </p>
                 </div>
                 <div><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
+                <?php
+            // On vérifie si l'article a un image
+            if($message['featured_image'] != null):
+                // On a une image, on la traite et on l'affiche
+                // On sépare le nom et l'extension
+                $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
+
+                // On crée le nom de l'image à afficher
+                $image = $nom_image . '-75pourcent.' . $extension;
+                
+                // On affiche l'image
+                ?>
+                <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>">
+
+                <?php
+            endif;
+        ?>
             </section>
             <?php endforeach; ?>
 
