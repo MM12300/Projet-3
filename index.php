@@ -74,6 +74,23 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     $query->execute();
     require_once('inc/close.php');
 
+    //DELETING OLD IMAGES
+    if ($message['featured_image'] != null) {
+        $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+
+        //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
+        $fichiers = scandir(__DIR__ . '/uploads/');
+
+        //On boucle sur les fichier scar c'est un tableau
+        foreach ($fichiers as $fichier) {
+            //Si le nom du fichier commence par la même chose que celle du fichier précédemment uploadé ($debutnom), alors on le supprime.
+            //strpos renvoit 0 si les deux STR comparés ont le mm début
+            if (strpos($fichier, $debutNom) === 0) {
+                // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
+                unlink(__DIR__ . '/uploads/' . $fichier);
+            }
+        }
+    }
 
     //On redirige vers la page art_admin
     header('Location: index.php');
