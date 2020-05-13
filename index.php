@@ -47,7 +47,7 @@ $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 
 
 
-//***** DELETE -  */
+//***** DELETE - DELETING * FROM MESSAGE WHERE ID */
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     //Checking if the messages exists
     $id = strip_tags($_GET['delete']);
@@ -108,7 +108,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 
 //***** UPDATE - */
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
-    //Checking if the messages exists
+    //****READ - Checking if the messages exists
     $id = strip_tags($_GET['edit']);
     $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
     $query = $db->prepare($sql);
@@ -123,7 +123,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         echo "le message que vous voulez modifier n'existe pas";
     };
 
-    //If message exists we want to know its category
+    //*****READ - If message exists we want to know its category
     $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
     $query = $db->prepare($sql);
     $query->bindValue(':id', $id, PDO::PARAM_INT);
@@ -137,19 +137,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $selected = 'selected';
     }
 
-
+    
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
             $title = strip_tags($_POST['titre']);
             $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
             
-
+            
             //DELETING OLD IMAGES
             if ($message['featured_image'] != null) {
                 $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-
-                //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
+                    //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
                 $fichiers = scandir(__DIR__ . '/uploads/');
 
                 //On boucle sur les fichier scar c'est un tableau
@@ -160,9 +159,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
                         unlink(__DIR__ . '/uploads/' . $fichier);
                     }
-                }
+                } 
             }
-
+            //-------- jusque la ca marche
 
             //IMAGES HANDELING - JPEG AND PNG ONLY
             if (isset($_FILES) && !empty($_FILES)) {
@@ -202,15 +201,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
             //**************** On met à jour la BDD : Messages
             //Requête SQL
-            $sql = 'UPDATE `messages` SET `title` = :title, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+            $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
             $query = $db->prepare($sql);
             $query->bindValue(':title', $title, PDO::PARAM_STR);
             $query->bindValue(':content', $content, PDO::PARAM_STR);
             $query->bindvalue(':id', $id, PDO::PARAM_INT);
             $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+            $query->bindValue(':image', $image_name, PDO::PARAM_STR);
             $query->execute();
 
-
+            
             //****************On met à jour la BDD articles_categories
             //On efface d'abord toutes les catégories associées à cet message
             //Puis on les écris à nouveau
