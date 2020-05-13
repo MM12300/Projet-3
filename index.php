@@ -175,12 +175,46 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $titre = strip_tags($_POST['titre']);
             $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
             $categories = strip_tags($_POST['categories']);
+
+            //IMAGES HANDELING - JPEG AND PNG ONLY
+            if (isset($_FILES) && !empty($_FILES)) {
+                if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                    $image = $_FILES['image'];
+                    if ($image['error'] != 0) {
+                        echo "Une erreur s'\est produite lors du chargement de votre fichier";
+                        die;
+                    }
+                    $types = ['image/png', 'image/jpeg'];
+                    if (!in_array($image['type'], $types)) {
+                        $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
+                        header('Location:art_ajout.php');
+                        die;
+                    }
+                    if ($image['size'] > 1048576) {
+                        echo "Le fichier est trop volumineux";
+                        die;
+                    }
+                    $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                    $image_name = md5(uniqid()) . '.' . $extension;
+                    $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                    if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                        echo "le fichier n'a pas été copié";
+                        die;
+                    } else {
+                        echo "Le fichier a été uploadé";
+                    }
+                   resizeImage($image_name, 75);
+                   resizeImage($image_name, 25);
+                   thumb(300, $image_name);
+                }
+            }
     
             
-            $sql = 'INSERT INTO `messages` (`title`,`content`, `users_id`) VALUES (:titre, :contenu, :user_id);';
+            $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
             $query = $db->prepare($sql); //Prepare method
             $query->bindValue(':titre', $titre, PDO::PARAM_STR);
             $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
+            $query->bindValue(':image', $image_name, PDO::PARAM_STR);
             $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
             $query->execute();
     
