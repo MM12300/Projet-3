@@ -331,11 +331,19 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 </head>
 
 <body class="container">
+    <header class="row">
+        
+    </header>
     <main>
         <!-- Input to  `messages` -->
         <section class="row" id="add-mess">
             <div class="col-12">
-                <h1>Ajouter un message</h1>
+                <h2><?php if (!$message) {
+                            echo "Ajouter un message";
+                        } else {
+                            echo "Modifier votre message";
+                        };
+                        ?></h2>
                 <form method="post" enctype="multipart/form-data">
                     <div>
                         <label for="titre">Titre : </label>
@@ -366,7 +374,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         </div>
                         <?php endforeach; ?>
                     </select>
-                    <button>
+                    <button class="btn btn-primary">
                         <!-- change the button if post a new message or update an old one -->
                         <?php if (!$message) {
                             echo "Ajouter le message";
@@ -384,12 +392,13 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
             <section class="row">
-                <h2>
-                    <!-- BUTTONS & TITLE -->
-                    <a><?= $message['title'] ?></a></h2>
+                <!-- BUTTONS & TITLE -->
+                <div class="col-12 d-flex flex-row">
+                <h2><a><?= $message['title'] ?></a></h2>            
                 <a href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
                 <a href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
-                <div>
+                </div>
+                <div class="col-12">
                     <p>
                         <!-- DATE & CATEGORIES -->
                         Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
@@ -403,7 +412,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             ?>
                     </p>
                 </div>
-                <div><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
+                <div class="col-12"><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
                 <?php
                     // On vérifie si l'article a un image
                     if ($message['featured_image'] != null) :
@@ -424,6 +433,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     ?>
             </section>
             <?php endforeach; ?>
+
+
+            
 
         </section>
     </main>

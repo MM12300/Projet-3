@@ -1,0 +1,7 @@
+/* FRAMES FOR LAYOUT */
+#display-mess, #add-mess{
+    border:red 1px solid;
+    width:100%;
+    margin:0;
+    padding:0;
+}
