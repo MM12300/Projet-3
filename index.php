@@ -137,18 +137,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $selected = 'selected';
     }
 
-    
+
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
             $title = strip_tags($_POST['titre']);
             $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
-            
-            
+
+
             //DELETING OLD IMAGES
             if ($message['featured_image'] != null) {
                 $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                    //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
+                //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
                 $fichiers = scandir(__DIR__ . '/uploads/');
 
                 //On boucle sur les fichier scar c'est un tableau
@@ -159,7 +159,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
                         unlink(__DIR__ . '/uploads/' . $fichier);
                     }
-                } 
+                }
             }
             //-------- jusque la ca marche
 
@@ -196,7 +196,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 }
             }
 
-            
+
 
 
             //**************** On met à jour la BDD : Messages
@@ -210,7 +210,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $query->bindValue(':image', $image_name, PDO::PARAM_STR);
             $query->execute();
 
-            
+
             //****************On met à jour la BDD articles_categories
             //On efface d'abord toutes les catégories associées à cet message
             //Puis on les écris à nouveau
@@ -325,63 +325,65 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
-    
-    
+
+
     <title>Expression libre</title>
 </head>
 
 <body class="container">
-    <main class="row">
+    <main>
         <!-- Input to  `messages` -->
-        <section class="col-12" id="add-mess">
-            <h1>Ajouter un message</h1>
-            <form method="post" enctype="multipart/form-data">
-                <div>
-                    <label for="titre">Titre : </label>
-                    <input type="text" id="titre" name="titre" value="<?= $title ?>">
-                </div>
-                <div>
-                    <label for="contenu">Contenu : </label>
-                    <textarea name="contenu" id="contenu"><?= $content ?></textarea>
-                </div>
-                <h2>Image</h2>
-                <div>
-                    <label for="image"> Image :</label>
-                    <input type="file" name="image" id="image">
-                </div>
-                <h2>Catégories</h2>
-                <!-- SELECT MENU FROM `categories`-->
-                <label for="categories">Catégories</label>
-                <!-- Need to know which category has the message when updating it -->
-                <?php
-
-                ?>
-
-                <select id="categories" name="categories" <?= $selected ?>>
-                    <!-- Creating a list of categories  -->
-                    <?php foreach ($categories as $categorie) : ?>
+        <section class="row" id="add-mess">
+            <div class="col-12">
+                <h1>Ajouter un message</h1>
+                <form method="post" enctype="multipart/form-data">
                     <div>
-                        <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                        <label for="titre">Titre : </label>
+                        <input type="text" id="titre" name="titre" value="<?= $title ?>">
                     </div>
-                    <?php endforeach; ?>
-                </select>
-                <button>
-                    <!-- change the button if post a new message or update an old one -->
-                    <?php if (!$message) {
-                        echo "Ajouter le message";
-                    } else {
-                        echo "Modifier le message";
-                    };
+                    <div>
+                        <label for="contenu">Contenu : </label>
+                        <textarea name="contenu" id="contenu"><?= $content ?></textarea>
+                    </div>
+                    <h2>Image</h2>
+                    <div>
+                        <label for="image"> Image :</label>
+                        <input type="file" name="image" id="image">
+                    </div>
+                    <h2>Catégories</h2>
+                    <!-- SELECT MENU FROM `categories`-->
+                    <label for="categories">Catégories</label>
+                    <!-- Need to know which category has the message when updating it -->
+                    <?php
+
                     ?>
 
-                </button>
-            </form>
+                    <select id="categories" name="categories" <?= $selected ?>>
+                        <!-- Creating a list of categories  -->
+                        <?php foreach ($categories as $categorie) : ?>
+                        <div>
+                            <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                        </div>
+                        <?php endforeach; ?>
+                    </select>
+                    <button>
+                        <!-- change the button if post a new message or update an old one -->
+                        <?php if (!$message) {
+                            echo "Ajouter le message";
+                        } else {
+                            echo "Modifier le message";
+                        };
+                        ?>
+
+                    </button>
+                </form>
+            </div>
         </section>
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
             <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-            <section class="col-12">
+            <section class="row">
                 <h2>
                     <!-- BUTTONS & TITLE -->
                     <a><?= $message['title'] ?></a></h2>
@@ -403,32 +405,32 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 </div>
                 <div><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
                 <?php
-            // On vérifie si l'article a un image
-            if($message['featured_image'] != null):
-                // On a une image, on la traite et on l'affiche
-                // On sépare le nom et l'extension
-                $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
+                    // On vérifie si l'article a un image
+                    if ($message['featured_image'] != null) :
+                        // On a une image, on la traite et on l'affiche
+                        // On sépare le nom et l'extension
+                        $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                        $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
 
-                // On crée le nom de l'image à afficher
-                $image = $nom_image . '-75pourcent.' . $extension;
-                
-                // On affiche l'image
-                ?>
+                        // On crée le nom de l'image à afficher
+                        $image = $nom_image . '-75pourcent.' . $extension;
+
+                        // On affiche l'image
+                        ?>
                 <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>">
 
                 <?php
-            endif;
-        ?>
+                    endif;
+                    ?>
             </section>
             <?php endforeach; ?>
 
         </section>
     </main>
-<!-- BOOTSTRAP    -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <!-- BOOTSTRAP    -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 </body>
 
 </html>
