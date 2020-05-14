@@ -349,9 +349,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <label for="titre">Titre : </label>
                         <input type="text" id="titre" name="titre" value="<?= $title ?>">
                     </div>
-                    <div>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                         <label for="contenu">Contenu : </label>
-                        <textarea name="contenu" id="contenu"><?= $content ?></textarea>
+                        </div>
+                        <textarea class="form-control" name="contenu" id="contenu"><?= $content ?></textarea>
                     </div>
                     <h2>Image</h2>
                     <div>
@@ -434,7 +436,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             </section>
             <?php endforeach; ?>
 
-
+            <div class="input-group">
+            <div class="input-group-prepend">
+            <span class="input-group-text">With textarea</span>
+    </div>
+  <textarea class="form-control" aria-label="With textarea"></textarea>
+</div>
             
 
         </section>
