@@ -332,79 +332,100 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 <body class="container">
     <header class="row">
-        
+
     </header>
     <main>
         <!-- Input to  `messages` -->
         <section class="row" id="add-mess">
             <div class="col-12">
                 <h2><?php if (!$message) {
-                            echo "Ajouter un message";
-                        } else {
-                            echo "Modifier votre message";
-                        };
-                        ?></h2>
+                        echo "Ajouter un message";
+                    } else {
+                        echo "Modifier votre message";
+                    };
+                    ?></h2>
                 <form method="post" enctype="multipart/form-data">
-                    <div>
-                        <label for="titre">Titre : </label>
-                        <input type="text" id="titre" name="titre" value="<?= $title ?>">
+                    <div class="input-group">
+                        <!-- <div class="input-group-prepend">
+                            <label for="titre">Titre : </label>
+                        </div> -->
+                        <input class="form-control" type="text" id="titre" name="titre" placeholder="<?php if (!$message) {
+                                                                                                            echo "Titre de votre message";
+                                                                                                        } else {
+                                                                                                            echo "";
+                                                                                                        };
+                                                                                                        ?>" value="<?= $title ?>">
                     </div>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                        <label for="contenu">Contenu : </label>
-                        </div>
-                        <textarea class="form-control" name="contenu" id="contenu"><?= $content ?></textarea>
+                        <!-- <div class="input-group-prepend">
+                            <label for="contenu">Contenu : </label>
+                        </div> -->
+                        <textarea class="form-control" name="contenu" id="contenu" placeholder="<?php if (!$message) {
+                                                                                                    echo "Contenu de votre message";
+                                                                                                } else {
+                                                                                                    echo "";
+                                                                                                };
+                                                                                                ?>"><?= $content ?></textarea>
                     </div>
                     <h2>Image</h2>
                     <div>
                         <label for="image"> Image :</label>
                         <input type="file" name="image" id="image">
                     </div>
+
                     <h2>Catégories</h2>
-                    <!-- SELECT MENU FROM `categories`-->
-                    <label for="categories">Catégories</label>
-                    <!-- Need to know which category has the message when updating it -->
-                    <?php
-
-                    ?>
-
-                    <select id="categories" name="categories" <?= $selected ?>>
-                        <!-- Creating a list of categories  -->
-                        <?php foreach ($categories as $categorie) : ?>
+                    <div class="d-flex flex-row justify-content-between">
+                        <!-- SELECT MENU FROM `categories`-->
                         <div>
-                            <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
-                        </div>
-                        <?php endforeach; ?>
-                    </select>
-                    <button class="btn btn-primary">
-                        <!-- change the button if post a new message or update an old one -->
-                        <?php if (!$message) {
-                            echo "Ajouter le message";
-                        } else {
-                            echo "Modifier le message";
-                        };
-                        ?>
+                            <label for="categories">Catégories</label>
+                            <!-- Need to know which category has the message when updating it -->
+                            <?php
 
-                    </button>
+                            ?>
+                            <select id="categories" name="categories" <?= $selected ?>>
+                                <!-- Creating a list of categories  -->
+                                <?php foreach ($categories as $categorie) : ?>
+                                <div>
+                                    <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                                </div>
+                                <?php endforeach; ?>
+
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">
+                            <!-- change the button if post a new message or update an old one -->
+                            <?php if (!$message) {
+                                echo "Ajouter le message";
+                            } else {
+                                echo "Modifier le message";
+                            };
+                            ?>
+
+                        </button>
+                    </div>
                 </form>
             </div>
         </section>
+
+
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
             <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
             <section class="row">
                 <!-- BUTTONS & TITLE -->
-                <div class="col-12 d-flex flex-row">
-                <h2><a><?= $message['title'] ?></a></h2>            
-                <a href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                <a href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                <div class="align-self-center col-12 d-flex flex-row justify-content-between">
+                    <h2><a><?= $message['title'] ?> </a></h2>
+                    <div class="align-self-center">
+                    <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                    <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                    </div>
                 </div>
                 <div class="col-12">
                     <p>
                         <!-- DATE & CATEGORIES -->
                         Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                        dans
+                        par
                         <?php
                             $categories = explode(',', $message['categorie_name']);
                             //Explode : transform string into an array after each ','                        
@@ -414,36 +435,28 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             ?>
                     </p>
                 </div>
-                <div class="col-12"><?= substr(strip_tags($message['content']), 0, 300) . '...' ?></div>
-                <?php
-                    // On vérifie si l'article a un image
-                    if ($message['featured_image'] != null) :
-                        // On a une image, on la traite et on l'affiche
-                        // On sépare le nom et l'extension
-                        $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                        $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
+                <div class="col-12">
 
-                        // On crée le nom de l'image à afficher
-                        $image = $nom_image . '-75pourcent.' . $extension;
 
-                        // On affiche l'image
-                        ?>
-                <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>">
+                    <?php
+                        // On vérifie si l'article a un image
+                        if ($message['featured_image'] != null) :
+                            // On a une image, on la traite et on l'affiche
+                            // On sépare le nom et l'extension
+                            $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                            $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
 
-                <?php
-                    endif;
-                    ?>
+                            // On crée le nom de l'image à afficher
+                            $image = $nom_image . '-75pourcent.' . $extension;
+
+                            // On affiche l'image
+                            ?>
+                    <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php 
+                    endif;?>>                                                                                    
+                    <?= substr(strip_tags($message['content']), 0, 300) . '...' ?>
+                </div>
             </section>
             <?php endforeach; ?>
-
-            <div class="input-group">
-            <div class="input-group-prepend">
-            <span class="input-group-text">With textarea</span>
-    </div>
-  <textarea class="form-control" aria-label="With textarea"></textarea>
-</div>
-            
-
         </section>
     </main>
     <!-- BOOTSTRAP    -->
