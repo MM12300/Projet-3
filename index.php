@@ -330,10 +330,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <title>Expression libre</title>
 </head>
 
-<body>
-    <main>
+<body class="container">
+    <main class="row">
         <!-- Input to  `messages` -->
-        <section id="add-mess">
+        <section class="col-12" id="add-mess">
             <h1>Ajouter un message</h1>
             <form method="post" enctype="multipart/form-data">
                 <div>
@@ -379,8 +379,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         </section>
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
+            <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-            <section>
+            <section class="col-12">
                 <h2>
                     <!-- BUTTONS & TITLE -->
                     <a><?= $message['title'] ?></a></h2>
