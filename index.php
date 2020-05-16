@@ -42,6 +42,7 @@ ORDER BY `created_at` DESC;';
 $query = $db->query($sql);
 $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 
+//************************************************************************************************************************************************************************************************** */
 
 //***CONDITION : DELETE CLICKED? */
 //******************************* */
@@ -92,6 +93,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 //     echo "message d'erreur";
 // }
 
+//************************************************************************************************************************************************************************************************** */
+
 //***CONDITION : UPDATE CLICKED? */
 //**************************** */
 //** UPDATING ONE MESSAGE */ */
@@ -124,153 +127,158 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $selected = 'selected';
     }
 
-    //***CONDITION : $_POST['message'] */
-    if (isset($_POST) && !empty($_POST)) {
-        if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-            $title = strip_tags($_POST['titre']);
-            $content = strip_tags($_POST['contenu']);
-            $id = strip_tags($_GET['edit']);
-            //DELETING OLD IMAGES
-            if ($message['featured_image'] != null) {
-                $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                $fichiers = scandir(__DIR__ . '/uploads/');
-                foreach ($fichiers as $fichier) {
-                    if (strpos($fichier, $debutNom) === 0) {
-                        unlink(__DIR__ . '/uploads/' . $fichier);
+    //***CONDITION : $_POST */
+    if (isset($_POST['message'])) {
+        if (isset($_POST) && !empty($_POST)) {
+            if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
+                $title = strip_tags($_POST['titre']);
+                $content = strip_tags($_POST['contenu']);
+                $id = strip_tags($_GET['edit']);
+                //DELETING OLD IMAGES
+                if ($message['featured_image'] != null) {
+                    $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                    $fichiers = scandir(__DIR__ . '/uploads/');
+                    foreach ($fichiers as $fichier) {
+                        if (strpos($fichier, $debutNom) === 0) {
+                            unlink(__DIR__ . '/uploads/' . $fichier);
+                        }
                     }
                 }
-            }
 
-            //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-            if (isset($_FILES) && !empty($_FILES)) {
-                if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                    $image = $_FILES['image'];
-                    if ($image['error'] != 0) {
-                        echo "Une erreur s'\est produite lors du chargement de votre fichier";
-                        die;
+                //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                if (isset($_FILES) && !empty($_FILES)) {
+                    if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                        $image = $_FILES['image'];
+                        if ($image['error'] != 0) {
+                            echo "Une erreur s'\est produite lors du chargement de votre fichier";
+                            die;
+                        }
+                        $types = ['image/png', 'image/jpeg'];
+                        if (!in_array($image['type'], $types)) {
+                            $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
+                            header('Location:art_ajout.php');
+                            die;
+                        }
+                        if ($image['size'] > 1048576) {
+                            echo "Le fichier est trop volumineux";
+                            die;
+                        }
+                        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                        $image_name = md5(uniqid()) . '.' . $extension;
+                        $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                        if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                            echo "le fichier n'a pas été copié";
+                            die;
+                        } else {
+                            echo "Le fichier a été uploadé";
+                        }
+                        resizeImage($image_name, 75);
+                        resizeImage($image_name, 25);
+                        thumb(300, $image_name);
                     }
-                    $types = ['image/png', 'image/jpeg'];
-                    if (!in_array($image['type'], $types)) {
-                        $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
-                        header('Location:art_ajout.php');
-                        die;
-                    }
-                    if ($image['size'] > 1048576) {
-                        echo "Le fichier est trop volumineux";
-                        die;
-                    }
-                    $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                    $image_name = md5(uniqid()) . '.' . $extension;
-                    $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                    if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                        echo "le fichier n'a pas été copié";
-                        die;
-                    } else {
-                        echo "Le fichier a été uploadé";
-                    }
-                    resizeImage($image_name, 75);
-                    resizeImage($image_name, 25);
-                    thumb(300, $image_name);
                 }
+                //*****UPDATE : `messages` */
+                $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                $query = $db->prepare($sql);
+                $query->bindValue(':title', $title, PDO::PARAM_STR);
+                $query->bindValue(':content', $content, PDO::PARAM_STR);
+                $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                $query->execute();
+
+                ////*****DELETE : `messages_categories` (to replace by new entries) */
+                $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
+                $query = $db->prepare($sql);
+                $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                $query->execute();
+                $category = $_POST['categories'];
+
+                ////*****CREATE : `messages_categories` */
+                $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                $query = $db->prepare($sql);
+                $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
+                $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
+                $query->execute();
             }
-            //*****UPDATE : `messages` */
-            $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
-            $query = $db->prepare($sql);
-            $query->bindValue(':title', $title, PDO::PARAM_STR);
-            $query->bindValue(':content', $content, PDO::PARAM_STR);
-            $query->bindvalue(':id', $id, PDO::PARAM_INT);
-            $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-            $query->bindValue(':image', $image_name, PDO::PARAM_STR);
-            $query->execute();
-
-            ////*****DELETE : `messages_categories` (to replace by new entries) */
-            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-            $query = $db->prepare($sql);
-            $query->bindvalue(':id', $id, PDO::PARAM_INT);
-            $query->execute();
-            $category = $_POST['categories'];
-
-            ////*****CREATE : `messages_categories` */
-            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-            $query = $db->prepare($sql);
-            $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-            $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
-            $query->execute();
+            header('Location: index.php');
         }
-        header('Location: index.php');
     }
+    //************************************************************************************************************************************************************************************************** */
 } else {
     //***CONDITION : $_POST['message'] */
     //**************************** */
     //** CREATING ONE MESSAGE */ */
     //**************************** */
-    if (isset($_POST) && !empty($_POST)) {
-        if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-            $titre = strip_tags($_POST['titre']);
-            $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
-            $categories = strip_tags($_POST['categories']);
+    if (isset($_POST['message'])) {
+        if (isset($_POST) && !empty($_POST)) {
+            if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
+                $titre = strip_tags($_POST['titre']);
+                $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
+                $categories = strip_tags($_POST['categories']);
 
-            //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-            if (isset($_FILES) && !empty($_FILES)) {
-                if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                    $image = $_FILES['image'];
-                    if ($image['error'] != 0) {
-                        echo "Une erreur s'\est produite lors du chargement de votre fichier";
-                        die;
+                //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                if (isset($_FILES) && !empty($_FILES)) {
+                    if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                        $image = $_FILES['image'];
+                        if ($image['error'] != 0) {
+                            echo "Une erreur s'\est produite lors du chargement de votre fichier";
+                            die;
+                        }
+                        $types = ['image/png', 'image/jpeg'];
+                        if (!in_array($image['type'], $types)) {
+                            $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
+                            header('Location:art_ajout.php');
+                            die;
+                        }
+                        if ($image['size'] > 1048576) {
+                            echo "Le fichier est trop volumineux";
+                            die;
+                        }
+                        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                        $image_name = md5(uniqid()) . '.' . $extension;
+                        $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                        if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                            echo "le fichier n'a pas été copié";
+                            die;
+                        } else {
+                            echo "Le fichier a été uploadé";
+                        }
+                        resizeImage($image_name, 75);
+                        resizeImage($image_name, 25);
+                        thumb(300, $image_name);
                     }
-                    $types = ['image/png', 'image/jpeg'];
-                    if (!in_array($image['type'], $types)) {
-                        $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
-                        header('Location:art_ajout.php');
-                        die;
-                    }
-                    if ($image['size'] > 1048576) {
-                        echo "Le fichier est trop volumineux";
-                        die;
-                    }
-                    $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                    $image_name = md5(uniqid()) . '.' . $extension;
-                    $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                    if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                        echo "le fichier n'a pas été copié";
-                        die;
-                    } else {
-                        echo "Le fichier a été uploadé";
-                    }
-                    resizeImage($image_name, 75);
-                    resizeImage($image_name, 25);
-                    thumb(300, $image_name);
                 }
+
+                ////*****CREATE : `messages_categories` */
+                $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
+                $query = $db->prepare($sql); //Prepare method
+                $query->bindValue(':titre', $titre, PDO::PARAM_STR);
+                $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
+                $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
+                $query->execute();
+
+                //collecting the message_id for the next step
+                $idMessage = $db->lastInsertId();
+
+                //***** CREATE - `messages_categories`
+                $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                $query = $db->prepare($sql); //Prepare method
+                $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
+                $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
+                $query->execute();
+
+                header('Location: index.php');
+            } else {
+                //On affiche un warning si l'utilisateur n'a pas remplis le formulaire
+                //les images ne seront par obligatoires
+                echo "Attention il faut indiquer un titre, des catégories et un contenu";
             }
-
-            ////*****CREATE : `messages_categories` */
-            $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
-            $query = $db->prepare($sql); //Prepare method
-            $query->bindValue(':titre', $titre, PDO::PARAM_STR);
-            $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
-            $query->bindValue(':image', $image_name, PDO::PARAM_STR);
-            $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
-            $query->execute();
-
-            //collecting the message_id for the next step
-            $idMessage = $db->lastInsertId();
-
-            //***** CREATE - `messages_categories`
-            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-            $query = $db->prepare($sql); //Prepare method
-            $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
-            $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
-            $query->execute();
-
-            header('Location: index.php');
-        } else {
-            //On affiche un warning si l'utilisateur n'a pas remplis le formulaire
-            //les images ne seront par obligatoires
-            echo "Attention il faut indiquer un titre, des catégories et un contenu";
         }
     }
 }
-
+//************************************************************************************************************************************************************************************************** */
 ?>
 
 
