@@ -148,15 +148,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             //DELETING OLD IMAGES
             if ($message['featured_image'] != null) {
                 $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
                 $fichiers = scandir(__DIR__ . '/uploads/');
-
-                //On boucle sur les fichier scar c'est un tableau
                 foreach ($fichiers as $fichier) {
-                    //Si le nom du fichier commence par la même chose que celle du fichier précédemment uploadé ($debutnom), alors on le supprime.
-                    //strpos renvoit 0 si les deux STR comparés ont le mm début
                     if (strpos($fichier, $debutNom) === 0) {
-                        // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
                         unlink(__DIR__ . '/uploads/' . $fichier);
                     }
                 }
@@ -447,7 +441,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
 
                             // On crée le nom de l'image à afficher
-                            $image = $nom_image . '-75pourcent.' . $extension;
+                            $image = $nom_image . '-300x300.' . $extension;
 
                             // On affiche l'image
                             ?>
