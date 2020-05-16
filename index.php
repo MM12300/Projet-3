@@ -17,12 +17,63 @@ HTML :
 $title = '';
 $content = '';
 $message = null;
+//SESSION
+session_start();
 //DB OPEN
 require_once('inc/connect.php');
 //functions library loading
 require_once('inc/lib.php');
 
+//********************************************************************************************************************************************************* */
+//* $_SESSION UTILISATEUR
+//*********** */
+if (isset($_POST['connect'])) {
+    if (isset($_POST) && !empty($_POST)) {
+        if (verifForm($_POST, ['mail', 'motdepasse'])) {
+            $mail = strip_tags($_POST['mail']);
+            $pass = $_POST['motdepasse'];
+            require_once("inc/connect.php");
+            $sql = 'SELECT * FROM `users` WHERE `email` = :email;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':email', $mail, PDO::PARAM_STR);
+            $query->execute();
+            $user = $query->fetch(PDO::FETCH_ASSOC);
+            if (!$user) {
+                echo 'Email et/ou mot de passe invalide';
+                die();
+            } else {
+                if (password_verify($pass, $user['password'])) {
+                    $_SESSION['user'] = [
+                        'id' => $user['id'],
+                        'email' => $user['email'],
+                        'name' => $user['name'],
+                        'roles' => $user['roles']
+                    ];
+                    if (isset($_POST['remember']) && $_POST['remember'] == 'on') {
+                        $token = md5(uniqid());
+                        setcookie('remember', $token, [
+                            'expires' => strtotime('12 months'),
+                            'sameSite' => 'strict'
+                        ]);
+                        $sql = 'UPDATE `users` SET `remember_token` = :token WHERE `id` = :id;';
+                        $query = $db->prepare($sql);
+                        $query->bindValue(':token', $token, PDO::PARAM_STR);
+                        $query->bindValue('id', $user['id'], PDO::PARAM_INT);
+                        $query->execute();              
+                    }
+                    die(var_dump($_SESSION));
+                } else {
+                    echo "Email et/ou mot de passe invalide";
+                }
+            }
+        } else {
+            echo "Veuillez renseigner votre mot passe ET votre email";
+        }
+    }
+}
 
+
+//************************************************************************************************************************************************************************************************** */
 //***** READ - `categories` */
 $sql = 'SELECT * FROM `categories` ORDER BY `name` ASC;';
 $query = $db->query($sql); //Query method
@@ -49,6 +100,43 @@ $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 //** DELETING ONE MESSAGE */ */
 //****************************** */
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
+    if(verifForm($_SESSION, ['user'])){
+        // L'utilisateur est connecté
+        // On vérifie si il est admin
+        // On transforme les rôles en tableau PHP
+        $roles = json_decode($_SESSION['user']['roles']);
+        
+    
+        //die(var_dump($_SESSION));
+        // Vérifier si $roles contient "ROLE_ADMIN", plus précisément si il ne le contient pas
+        if(!in_array('ROLE_ADMIN', $roles)){
+            // L'utilisateur n'est pas administrateur
+            // On affichera une erreur 404 (Ici une 403 serait plus appropriée)
+            // On envoie un code réponse 404
+            http_response_code(404);
+    
+            // On génère le contenu 
+            include('errors/404.php');
+            // On sort "proprement"
+            exit;
+        }
+    }else{
+        // L'utilisateur n'est pas connecté
+        // On affichera une erreur 403
+        // On envoie un code répose 403
+        http_response_code(403);
+    
+        // On génère le contenu
+        include('errors/403.php');
+    
+        // On sort proprement
+        exit;
+    }
+    // FIN VERIFICATION PERMISSIONS D'ACCES
+
+
+
+
     //****READ - Checking if the messages exists
     $id = strip_tags($_GET['delete']);
     $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
@@ -302,6 +390,26 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
     </header>
     <main>
+        <section class="row" id="connect">
+            <h2>Formulaire de connexion</h2>
+            <form method="post">
+                <div>
+                    <label for="mail">Email :</label>
+                    <input type="email" id="mail" name="mail">
+                </div>
+                <div>
+                    <label for="pass">Mot de passe</label>
+                    <input type="password" id="motdepasse" name="motdepasse">
+                </div>
+                <div>
+                    <input type="checkbox" name="remember" id="remember">
+                    <label for="remember">Rester connecté(e)</label>
+                </div>
+                <button name="connect">Me connecter</button>
+            </form>
+            <a href="oubli_pass.php">Mot de passe oublié ? Cliquez ici</a>
+
+        </section>
         <!-- Input to  `messages` -->
         <section class="row" id="add-mess">
             <div class="col-12">
