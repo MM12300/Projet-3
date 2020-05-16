@@ -29,8 +29,7 @@ $query = $db->query($sql); //Query method
 $categories = $query->fetchALl(PDO::FETCH_ASSOC);
 
 
-//***** READ - */
-//Requête SQL
+//***** READ - `messages` && `messages_categories : JOIN */
 $sql = 'SELECT `messages`.*,
 GROUP_CONCAT(`categories`.`name`) as categorie_name
 FROM `messages`
@@ -44,12 +43,12 @@ $query = $db->query($sql);
 $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 
 
-
-
-
-//***** DELETE - DELETING * FROM MESSAGE WHERE ID */
+//***CONDITION : DELETE CLICKED? */
+//******************************* */
+//** DELETING ONE MESSAGE */ */
+//****************************** */
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
-    //Checking if the messages exists
+    //****READ - Checking if the messages exists
     $id = strip_tags($_GET['delete']);
     $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
     $query = $db->prepare($sql);
@@ -61,13 +60,13 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         echo "le message que vous voulez supprimer n'existe pas";
     }
 
-    //Removing in categories from the linked table `messages_categories`
+    //***** DELETE - from `messages_categories`*/
     $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
     $query = $db->prepare($sql);
     $query->bindValue(':id', $id, PDO::PARAM_INT);
     $query->execute();
 
-    //Removing input id from `messages`
+    //***** DELETE - from `messages_categories`*/
     $sql = 'DELETE FROM `messages` WHERE `id` = :id;';
     $query = $db->prepare($sql);
     $query->bindValue(':id', $id, PDO::PARAM_INT);
@@ -77,21 +76,13 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     //DELETING OLD IMAGES
     if ($message['featured_image'] != null) {
         $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-
-        //On récupère la liste des fichiers dans le dossier "uploads" dans un tableau
         $fichiers = scandir(__DIR__ . '/uploads/');
-
-        //On boucle sur les fichier scar c'est un tableau
         foreach ($fichiers as $fichier) {
-            //Si le nom du fichier commence par la même chose que celle du fichier précédemment uploadé ($debutnom), alors on le supprime.
-            //strpos renvoit 0 si les deux STR comparés ont le mm début
             if (strpos($fichier, $debutNom) === 0) {
-                // attention pas ==, car on compare en valeur et en type, et si !===0, c'est égal à false, donc aussi valeur 0
                 unlink(__DIR__ . '/uploads/' . $fichier);
             }
         }
     }
-
     //On redirige vers la page art_admin
     header('Location: index.php');
 }
@@ -101,12 +92,10 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 //     echo "message d'erreur";
 // }
 
-
-
-
-
-
-//***** UPDATE - */
+//***CONDITION : UPDATE CLICKED? */
+//**************************** */
+//** UPDATING ONE MESSAGE */ */
+//**************************** */
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     //****READ - Checking if the messages exists
     $id = strip_tags($_GET['edit']);
@@ -129,22 +118,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $query->bindValue(':id', $id, PDO::PARAM_INT);
     $query->execute();
     $message_cat = $query->fetch(PDO::FETCH_ASSOC);
-
-    //die(var_dump($message_cat['messages_id']));
-
+    //setting selected empty
     $selected = "";
     if ($message_cat['messages_id'] == $message['id']) {
         $selected = 'selected';
     }
 
-
+    //***CONDITION : $_POST['message'] */
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
             $title = strip_tags($_POST['titre']);
             $content = strip_tags($_POST['contenu']);
             $id = strip_tags($_GET['edit']);
-
-
             //DELETING OLD IMAGES
             if ($message['featured_image'] != null) {
                 $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
@@ -155,9 +140,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     }
                 }
             }
-            //-------- jusque la ca marche
 
-            //IMAGES HANDELING - JPEG AND PNG ONLY
+            //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
             if (isset($_FILES) && !empty($_FILES)) {
                 if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
                     $image = $_FILES['image'];
@@ -189,12 +173,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     thumb(300, $image_name);
                 }
             }
-
-
-
-
-            //**************** On met à jour la BDD : Messages
-            //Requête SQL
+            //*****UPDATE : `messages` */
             $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
             $query = $db->prepare($sql);
             $query->bindValue(':title', $title, PDO::PARAM_STR);
@@ -204,46 +183,34 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $query->bindValue(':image', $image_name, PDO::PARAM_STR);
             $query->execute();
 
-
-            //****************On met à jour la BDD articles_categories
-            //On efface d'abord toutes les catégories associées à cet message
-            //Puis on les écris à nouveau
-
-            //Requête SQL
+            ////*****DELETE : `messages_categories` (to replace by new entries) */
             $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
             $query = $db->prepare($sql);
             $query->bindvalue(':id', $id, PDO::PARAM_INT);
-            //On éxécute la requête
             $query->execute();
-
-            //On récupère dans $_POST les catégories qui sont cochées
             $category = $_POST['categories'];
-            //On ajoute les catégories
+
+            ////*****CREATE : `messages_categories` */
             $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
             $query = $db->prepare($sql);
             $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
             $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
             $query->execute();
         }
-
-
-
         header('Location: index.php');
     }
-
-
-
-    //***** CREATE - `messages`
 } else {
+    //***CONDITION : $_POST['message'] */
+    //**************************** */
+    //** CREATING ONE MESSAGE */ */
+    //**************************** */
     if (isset($_POST) && !empty($_POST)) {
-        //verifForm => $_POST input/select checking
         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-            //FORM resultats, variable creation and security
             $titre = strip_tags($_POST['titre']);
             $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
             $categories = strip_tags($_POST['categories']);
 
-            //IMAGES HANDELING - JPEG AND PNG ONLY
+            //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
             if (isset($_FILES) && !empty($_FILES)) {
                 if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
                     $image = $_FILES['image'];
@@ -276,7 +243,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 }
             }
 
-
+            ////*****CREATE : `messages_categories` */
             $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
             $query = $db->prepare($sql); //Prepare method
             $query->bindValue(':titre', $titre, PDO::PARAM_STR);
@@ -288,14 +255,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             //collecting the message_id for the next step
             $idMessage = $db->lastInsertId();
 
-
             //***** CREATE - `messages_categories`
             $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
             $query = $db->prepare($sql); //Prepare method
             $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
             $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
             $query->execute();
-
 
             header('Location: index.php');
         } else {
@@ -379,14 +344,14 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             <select id="categories" name="categories" <?= $selected ?>>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                <div>
-                                    <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
-                                </div>
+                                    <div>
+                                        <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                                    </div>
                                 <?php endforeach; ?>
 
                             </select>
                         </div>
-                        <button class="btn btn-primary">
+                        <button name="message" class="btn btn-primary">
                             <!-- change the button if post a new message or update an old one -->
                             <?php if (!$message) {
                                 echo "Ajouter le message";
@@ -406,33 +371,33 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <section id="display-mess">
             <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-            <section class="row">
-                <!-- BUTTONS & TITLE -->
-                <div class="align-self-center col-12 d-flex flex-row justify-content-between">
-                    <h2><a><?= $message['title'] ?> </a></h2>
-                    <div class="align-self-center">
-                    <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                    <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                <section class="row">
+                    <!-- BUTTONS & TITLE -->
+                    <div class="align-self-center col-12 d-flex flex-row justify-content-between">
+                        <h2><a><?= $message['title'] ?> </a></h2>
+                        <div class="align-self-center">
+                            <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                            <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                        </div>
                     </div>
-                </div>
-                <div class="col-12">
-                    <p>
-                        <!-- DATE & CATEGORIES -->
-                        Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                        par
-                        <?php
+                    <div class="col-12">
+                        <p>
+                            <!-- DATE & CATEGORIES -->
+                            Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
+                            par
+                            <?php
                             $categories = explode(',', $message['categorie_name']);
                             //Explode : transform string into an array after each ','                        
                             foreach ($categories as $categorie) {
                                 echo '<a href="#">' . $categorie . '</a> ';
                             }
                             ?>
-                    </p>
-                </div>
-                <div class="col-12">
+                        </p>
+                    </div>
+                    <div class="col-12">
 
 
-                    <?php
+                        <?php
                         // On vérifie si l'article a un image
                         if ($message['featured_image'] != null) :
                             // On a une image, on la traite et on l'affiche
@@ -444,12 +409,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $image = $nom_image . '-300x300.' . $extension;
 
                             // On affiche l'image
-                            ?>
-                    <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php 
-                    endif;?>>                                                                                    
-                    <?= substr(strip_tags($message['content']), 0, 300) . '...' ?>
-                </div>
-            </section>
+                        ?>
+                            <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php
+                                                                                        endif; ?>>
+                            <?= substr(strip_tags($message['content']), 0, 300) . '...' ?>
+                    </div>
+                </section>
             <?php endforeach; ?>
         </section>
     </main>
