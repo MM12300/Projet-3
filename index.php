@@ -101,18 +101,8 @@ $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 //****************************** */
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     if(verifForm($_SESSION, ['user'])){
-        // L'utilisateur est connecté
-        // On vérifie si il est admin
-        // On transforme les rôles en tableau PHP
         $roles = json_decode($_SESSION['user']['roles']);
-        
-    
-        //die(var_dump($_SESSION));
-        // Vérifier si $roles contient "ROLE_ADMIN", plus précisément si il ne le contient pas
         if(!in_array('ROLE_ADMIN', $roles)){
-            // L'utilisateur n'est pas administrateur
-            // On affichera une erreur 404 (Ici une 403 serait plus appropriée)
-            // On envoie un code réponse 404
             http_response_code(404);
     
             // On génère le contenu 
