@@ -12,6 +12,12 @@ HTML :
 - #display-mess : Show all from `messages` with `messages_categories` -->
 
 
+<!-- 
+$_SESSION : User with admin rights :
+    => Etoilenoire@gmail.com
+    => mdp : 123456 -->
+
+
 
 <?php
 $title = '';
@@ -27,6 +33,50 @@ require_once('inc/lib.php');
 //********************************************************************************************************************************************************* */
 //* $_SESSION UTILISATEUR
 //*********** */
+
+// VERIFICATION PERMISSIONS D'ACCES
+// On vérifie qu'on a une session user 
+if(verifForm($_SESSION, ['user'])){
+    // L'utilisateur est connecté
+    // On vérifie si il est admin
+    // On transforme les rôles en tableau PHP
+    $roles = json_decode($_SESSION['user']['roles']);
+    
+
+    //die(var_dump($_SESSION));
+    // Vérifier si $roles contient "ROLE_ADMIN", plus précisément si il ne le contient pas
+    if(!in_array('ROLE_ADMIN', $roles)){
+        // L'utilisateur n'est pas administrateur
+        // On affichera une erreur 404 (Ici une 403 serait plus appropriée)
+        // On envoie un code réponse 404
+        http_response_code(404);
+
+        // On génère le contenu 
+        include('errors/404.php');
+        // On sort "proprement"
+        exit;
+    }
+}else{
+    // L'utilisateur n'est pas connecté
+    // On affichera une erreur 403
+    // On envoie un code répose 403
+    http_response_code(403);
+
+    // On génère le contenu
+    include('errors/403.php');
+
+    // On sort proprement
+    exit;
+}
+// FIN VERIFICATION PERMISSIONS D'ACCES
+
+
+
+
+
+
+
+
 if (isset($_POST['connect'])) {
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['mail', 'motdepasse'])) {
