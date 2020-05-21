@@ -23,6 +23,8 @@ $_SESSION : User with admin rights :
 $title = '';
 $content = '';
 $message = null;
+
+
 //SESSION
 session_start();
 //DB OPEN
@@ -34,49 +36,26 @@ require_once('inc/lib.php');
 //* $_SESSION UTILISATEUR
 //*********** */
 
-// VERIFICATION PERMISSIONS D'ACCES
-// On vérifie qu'on a une session user 
-if(verifForm($_SESSION, ['user'])){
-    // L'utilisateur est connecté
-    // On vérifie si il est admin
-    // On transforme les rôles en tableau PHP
+
+
+//Checking user's roles
+if (verifForm($_SESSION, ['user'])) {
+    //if there is a user connected, we check his role
     $roles = json_decode($_SESSION['user']['roles']);
-    
 
-    //die(var_dump($_SESSION));
-    // Vérifier si $roles contient "ROLE_ADMIN", plus précisément si il ne le contient pas
-    if(!in_array('ROLE_ADMIN', $roles)){
-        // L'utilisateur n'est pas administrateur
-        // On affichera une erreur 404 (Ici une 403 serait plus appropriée)
-        // On envoie un code réponse 404
-        http_response_code(404);
-
-        // On génère le contenu 
-        include('errors/404.php');
-        // On sort "proprement"
-        exit;
+    if (!in_array('ROLE_ADMIN', $roles)) {
+        $notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+    } else {
+        $isAdmin = "Vous êtes connectés en tant qu'administrateur";
     }
-}else{
-    // L'utilisateur n'est pas connecté
-    // On affichera une erreur 403
-    // On envoie un code répose 403
-    http_response_code(403);
-
-    // On génère le contenu
-    include('errors/403.php');
-
-    // On sort proprement
-    exit;
+} else {
+    $noUser = "Il n'y a pas d'utilisateurs connectés";
 }
-// FIN VERIFICATION PERMISSIONS D'ACCES
 
 
 
 
-
-
-
-
+//********************************************************************* USER'S CONNECTION */
 if (isset($_POST['connect'])) {
     if (isset($_POST) && !empty($_POST)) {
         if (verifForm($_POST, ['mail', 'motdepasse'])) {
@@ -109,9 +88,8 @@ if (isset($_POST['connect'])) {
                         $query = $db->prepare($sql);
                         $query->bindValue(':token', $token, PDO::PARAM_STR);
                         $query->bindValue('id', $user['id'], PDO::PARAM_INT);
-                        $query->execute();              
+                        $query->execute();
                     }
-                    die(var_dump($_SESSION));
                 } else {
                     echo "Email et/ou mot de passe invalide";
                 }
@@ -150,71 +128,71 @@ $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 //** DELETING ONE MESSAGE */ */
 //****************************** */
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
-    if(verifForm($_SESSION, ['user'])){
+    if (verifForm($_SESSION, ['user'])) {
+        //if there is a user connected, we check his role
         $roles = json_decode($_SESSION['user']['roles']);
-        if(!in_array('ROLE_ADMIN', $roles)){
-            http_response_code(404);
-    
-            // On génère le contenu 
-            include('errors/404.php');
-            // On sort "proprement"
-            exit;
-        }
-    }else{
-        // L'utilisateur n'est pas connecté
-        // On affichera une erreur 403
-        // On envoie un code répose 403
-        http_response_code(403);
-    
-        // On génère le contenu
-        include('errors/403.php');
-    
-        // On sort proprement
-        exit;
-    }
-    // FIN VERIFICATION PERMISSIONS D'ACCES
 
+        if (!in_array('ROLE_ADMIN', $roles)) {
+            echo "Vous ne pouvez pas effacer de message car vous n'êtes pas administrateurs";
+            //$notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+        } else {
 
-
-
-    //****READ - Checking if the messages exists
-    $id = strip_tags($_GET['delete']);
-    $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
-    $query = $db->prepare($sql);
-    $query->bindValue(':id', $id, PDO::PARAM_INT);
-    $query->execute();
-    $message = $query->fetch(PDO::FETCH_ASSOC);
-    if (!$message) {
-        //header('Location: index.php');
-        echo "le message que vous voulez supprimer n'existe pas";
-    }
-
-    //***** DELETE - from `messages_categories`*/
-    $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-    $query = $db->prepare($sql);
-    $query->bindValue(':id', $id, PDO::PARAM_INT);
-    $query->execute();
-
-    //***** DELETE - from `messages_categories`*/
-    $sql = 'DELETE FROM `messages` WHERE `id` = :id;';
-    $query = $db->prepare($sql);
-    $query->bindValue(':id', $id, PDO::PARAM_INT);
-    $query->execute();
-    require_once('inc/close.php');
-
-    //DELETING OLD IMAGES
-    if ($message['featured_image'] != null) {
-        $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-        $fichiers = scandir(__DIR__ . '/uploads/');
-        foreach ($fichiers as $fichier) {
-            if (strpos($fichier, $debutNom) === 0) {
-                unlink(__DIR__ . '/uploads/' . $fichier);
+            //****READ - Checking if the messages exists
+            $id = strip_tags($_GET['delete']);
+            $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+            $message = $query->fetch(PDO::FETCH_ASSOC);
+            if (!$message) {
+                //header('Location: index.php');
+                echo "le message que vous voulez supprimer n'existe pas";
             }
+
+            //***** DELETE - from `messages_categories`*/
+            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+
+            //***** DELETE - from `messages_categories`*/
+            $sql = 'DELETE FROM `messages` WHERE `id` = :id;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+            require_once('inc/close.php');
+
+            //DELETING OLD IMAGES
+            if ($message['featured_image'] != null) {
+                $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                $fichiers = scandir(__DIR__ . '/uploads/');
+                foreach ($fichiers as $fichier) {
+                    if (strpos($fichier, $debutNom) === 0) {
+                        unlink(__DIR__ . '/uploads/' . $fichier);
+                    }
+                }
+            }
+            //On redirige vers la page art_admin
+            header('Location: index.php');
         }
     }
-    //On redirige vers la page art_admin
-    header('Location: index.php');
+} else {
+    //$noUser = "Il n'y a pas d'utilisateurs connectés";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // else {
 //     //header('Location: index.php');
@@ -427,7 +405,25 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 <body class="container">
     <header class="row">
+        <?php
+        if (verifForm($_SESSION, ['user'])) {
+            $roles = json_decode($_SESSION['user']['roles']);
+            if (!in_array('ROLE_ADMIN', $roles)) {
+                echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
+            } else {
+                echo "<div> Vous êtes connectés en tant qu'administrateur </div>";
+            }
+        } else {
+            echo "<div>Aucun utilisateur est connecté</div>";
+        }
+        ?>
 
+
+
+
+        <!-- <div><?= $notAdmin  ?></div>
+        <div><?= $noUser ?></div>
+        <div><? $isAdmin ?></div> -->
     </header>
     <main>
         <section class="row" id="connect">
