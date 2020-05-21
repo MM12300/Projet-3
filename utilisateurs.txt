@@ -1,0 +1,7 @@
+Administrateur
+admin@gmail.com
+123456
+
+Utilisateur
+user@gmail.com
+654321
