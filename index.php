@@ -25,7 +25,7 @@ $content = '';
 $message = null;
 $alertConnectRequired = '';
 $alertAdminRequired = '';
-$connected = '' ;
+$connected = '';
 
 
 //SESSION
@@ -39,7 +39,7 @@ require_once('inc/lib.php');
 //* $_SESSION UTILISATEUR
 //*********** */
 
-
+//A SUPPRIMER À LA FIN 
 
 //Checking user's roles
 if (verifForm($_SESSION, ['user'])) {
@@ -91,6 +91,8 @@ if (isset($_POST['connect'])) {
                         $query->bindValue(':token', $token, PDO::PARAM_STR);
                         $query->bindValue('id', $user['id'], PDO::PARAM_INT);
                         $query->execute();
+
+                        header('Location: index.php');
                     }
                 } else {
                     echo "Email et/ou mot de passe invalide";
@@ -135,8 +137,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         $roles = json_decode($_SESSION['user']['roles']);
 
         if (!in_array('ROLE_ADMIN', $roles)) {
-            echo "Vous ne pouvez pas effacer de message car vous n'êtes pas administrateur";
-            //$notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            $alertAdminRequired = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         } else {
 
             //****READ - Checking if the messages exists
@@ -194,121 +195,126 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 //** UPDATING ONE MESSAGE */ */
 //**************************** */
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+    if (verifForm($_SESSION, ['user'])) {
+        if (in_array('ROLE_ADMIN', $roles)) {
 
 
-    
-    //****READ - Checking if the messages exists
-    $id = strip_tags($_GET['edit']);
-    $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
-    $query = $db->prepare($sql);
-    $query->bindValue(':id', $id, PDO::PARAM_INT);
-    $query->execute();
-    $message = $query->fetch(PDO::FETCH_ASSOC);
+            //****READ - Checking if the messages exists
+            $id = strip_tags($_GET['edit']);
+            $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+            $message = $query->fetch(PDO::FETCH_ASSOC);
 
-    $title = $message['title'];
-    $content = $message['content'];
-    if (!$message) {
-        //header('Location: index.php');
-        echo "le message que vous voulez modifier n'existe pas";
-    };
+            $title = $message['title'];
+            $content = $message['content'];
+            if (!$message) {
+                //header('Location: index.php');
+                echo "le message que vous voulez modifier n'existe pas";
+            };
 
-    //*****READ - If message exists we want to know its category
-    $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
-    $query = $db->prepare($sql);
-    $query->bindValue(':id', $id, PDO::PARAM_INT);
-    $query->execute();
-    $message_cat = $query->fetch(PDO::FETCH_ASSOC);
-    //setting selected empty
-    $selected = "";
-    if ($message_cat['messages_id'] == $message['id']) {
-        $selected = 'selected';
-    }
+            //*****READ - If message exists we want to know its category
+            $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
+            $query = $db->prepare($sql);
+            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->execute();
+            $message_cat = $query->fetch(PDO::FETCH_ASSOC);
+            //setting selected empty
+            $selected = "";
+            if ($message_cat['messages_id'] == $message['id']) {
+                $selected = 'selected';
+            }
 
-    //***CONDITION : $_POST */
-    if (isset($_POST['message'])) {
-        if (isset($_POST) && !empty($_POST)) {
-            if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-                $title = strip_tags($_POST['titre']);
-                $content = strip_tags($_POST['contenu']);
-                $id = strip_tags($_GET['edit']);
+            //***CONDITION : $_POST */
+            if (isset($_POST['message'])) {
+                if (isset($_POST) && !empty($_POST)) {
+                    if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
+                        $title = strip_tags($_POST['titre']);
+                        $content = strip_tags($_POST['contenu']);
+                        $id = strip_tags($_GET['edit']);
 
 
-                //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-                if (isset($_FILES) && !empty($_FILES)) {
-                    if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                        //DELETING OLD IMAGES
-                        if ($message['featured_image'] != null) {
-                            $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                            $fichiers = scandir(__DIR__ . '/uploads/');
-                            foreach ($fichiers as $fichier) {
-                                if (strpos($fichier, $debutNom) === 0) {
-                                    unlink(__DIR__ . '/uploads/' . $fichier);
+                        //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                        if (isset($_FILES) && !empty($_FILES)) {
+                            if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                                //DELETING OLD IMAGES
+                                if ($message['featured_image'] != null) {
+                                    $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                                    $fichiers = scandir(__DIR__ . '/uploads/');
+                                    foreach ($fichiers as $fichier) {
+                                        if (strpos($fichier, $debutNom) === 0) {
+                                            unlink(__DIR__ . '/uploads/' . $fichier);
+                                        }
+                                    }
                                 }
+                                $image = $_FILES['image'];
+                                if ($image['error'] != 0) {
+                                    echo "Une erreur s'\est produite lors du chargement de votre fichier";
+                                    die;
+                                }
+                                $types = ['image/png', 'image/jpeg'];
+                                if (!in_array($image['type'], $types)) {
+                                    $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
+                                    header('Location:art_ajout.php');
+                                    die;
+                                }
+                                if ($image['size'] > 1048576) {
+                                    echo "Le fichier est trop volumineux";
+                                    die;
+                                }
+                                $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                                $image_name = md5(uniqid()) . '.' . $extension;
+                                $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                                if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                                    echo "le fichier n'a pas été copié";
+                                    die;
+                                } else {
+                                    echo "Le fichier a été uploadé";
+                                }
+                                resizeImage($image_name, 75);
+                                resizeImage($image_name, 25);
+                                thumb(300, $image_name);
+                                //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
+                                $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                                $query = $db->prepare($sql);
+                                $query->bindValue(':title', $title, PDO::PARAM_STR);
+                                $query->bindValue(':content', $content, PDO::PARAM_STR);
+                                $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                                $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                                $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                                $query->execute();
                             }
+                            //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
+                            $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                            $query = $db->prepare($sql);
+                            $query->bindValue(':title', $title, PDO::PARAM_STR);
+                            $query->bindValue(':content', $content, PDO::PARAM_STR);
+                            $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                            $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                            $query->execute();
                         }
-                        $image = $_FILES['image'];
-                        if ($image['error'] != 0) {
-                            echo "Une erreur s'\est produite lors du chargement de votre fichier";
-                            die;
-                        }
-                        $types = ['image/png', 'image/jpeg'];
-                        if (!in_array($image['type'], $types)) {
-                            $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
-                            header('Location:art_ajout.php');
-                            die;
-                        }
-                        if ($image['size'] > 1048576) {
-                            echo "Le fichier est trop volumineux";
-                            die;
-                        }
-                        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                        $image_name = md5(uniqid()) . '.' . $extension;
-                        $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                        if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                            echo "le fichier n'a pas été copié";
-                            die;
-                        } else {
-                            echo "Le fichier a été uploadé";
-                        }
-                        resizeImage($image_name, 75);
-                        resizeImage($image_name, 25);
-                        thumb(300, $image_name);
-                        //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
-                        $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+
+
+                        ////*****DELETE : `messages_categories` (to replace by new entries) */
+                        $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
                         $query = $db->prepare($sql);
-                        $query->bindValue(':title', $title, PDO::PARAM_STR);
-                        $query->bindValue(':content', $content, PDO::PARAM_STR);
                         $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                        $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                        $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                        $query->execute();
+                        $category = $_POST['categories'];
+
+                        ////*****CREATE : `messages_categories` */
+                        $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                        $query = $db->prepare($sql);
+                        $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
+                        $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
                         $query->execute();
                     }
-                    //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
-                    $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
-                    $query = $db->prepare($sql);
-                    $query->bindValue(':title', $title, PDO::PARAM_STR);
-                    $query->bindValue(':content', $content, PDO::PARAM_STR);
-                    $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                    $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                    $query->execute();
+                    header('Location: index.php');
                 }
-
-
-                ////*****DELETE : `messages_categories` (to replace by new entries) */
-                $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-                $query = $db->prepare($sql);
-                $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                $query->execute();
-                $category = $_POST['categories'];
-
-                ////*****CREATE : `messages_categories` */
-                $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                $query = $db->prepare($sql);
-                $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-                $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
-                $query->execute();
             }
-            header('Location: index.php');
+        } else {
+            $alertAdminRequired = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         }
     }
     //************************************************************************************************************************************************************************************************** */
@@ -384,7 +390,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     echo "Attention il faut indiquer un titre, des catégories et un contenu";
                 }
             }
-        }else{
+        } else {
             $alertConnectRequired = "Vous devez vous connecter pour écrire un message";
         }
     }
@@ -414,12 +420,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 <body class="container">
     <header class="row">
         <div>
-            <?php if (verifForm($_SESSION, ['user'])) :?>
-            <p><?=$_SESSION['user']['name']?> est connecté</p>
+            <?php if (verifForm($_SESSION, ['user'])) : ?>
+                <p><?= $_SESSION['user']['name'] ?> est connecté</p>
             <?php else : ?>
-            <?=$alertConnectRequired?>
+                <?= $alertConnectRequired ?>
             <?php endif ?>
-            <p><?=$alertAdminRequired?></p>
+            <p><?= $alertAdminRequired ?></p>
         </div>
         <?php
         if (verifForm($_SESSION, ['user'])) {
