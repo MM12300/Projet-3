@@ -46,7 +46,7 @@ if (verifForm($_SESSION, ['user'])) {
     //if there is a user connected, we check his role
     $roles = json_decode($_SESSION['user']['roles']);
     if (!in_array('ROLE_ADMIN', $roles)) {
-        $notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+        //$notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
     } else {
         $isAdmin = "Vous êtes connectés en tant qu'administrateur";
     }
@@ -432,15 +432,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $roles = json_decode($_SESSION['user']['roles']);
             if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 if (!in_array('ROLE_ADMIN', $roles)) {
-                    echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
+                    //echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
                 } else {
                     echo "<div> Vous êtes connectés en tant qu'administrateur </div>";
                 }
             }
-        } else {
-            //header('Location: index.php');
-            echo "<div>Connectez-vous pour supprimer ou modifier un message</div>";
-        }
+        } 
         ?>
 
 
