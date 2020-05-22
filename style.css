@@ -10,3 +10,26 @@
 img{
     width:250px;
 }
+
+body{
+    background-color: #2D2D2A;
+    color : #fff;
+}
+
+header, main, .row, .col{
+    background-color:#4C4C47;
+}
+
+.input_connect{
+    width:200px;
+}
+
+.input_message{
+    width:80%;
+}
+
+.table{
+    text-align:center;
+    width: 90%;
+    color:white;
+}

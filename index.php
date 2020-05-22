@@ -412,14 +412,13 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
-
-
-    <title>Expression libre</title>
+    <title>C.R.U.D. One-Page</title>
 </head>
 
 <body class="container">
+    <h1>Le C.R.U.D. sur une page</h1>
     <header class="row">
-        <div>
+        <div id="alerts">
             <?php if (verifForm($_SESSION, ['user'])) : ?>
                 <p><?= $_SESSION['user']['name'] ?> est connecté</p>
             <?php else : ?>
@@ -427,47 +426,88 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             <?php endif ?>
             <p><?= $alertAdminRequired ?></p>
         </div>
+        <div id="intro">
+            <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
+            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>j'ai décidé de créer une page qui s'apparente à une livre d'or ou à une section de commentaire de base de page comme on peut en retrouver sur les sites d'e-commerce. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO).</p>
+            <p>Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message. Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
+            <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p>
+            <div class="d-flex justify-content-center">
+            <table class="table tableau">
+                <thead>
+                    <tr>
+                        <th scope="col">Type d'utilisateur</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">Mot de passe</th>
+                        <th scope="col">Fonctionnalité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Non-connecté</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>Ne peut pas poster de message</td>
+                    </tr>
+                    <tr>
+                        <td>Utilisateur classique</td>
+                        <td>user@gmail.com</td>
+                        <td>654321</td>
+                        <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
+                    </tr>
+                    <tr>
+                        <td>Administrateur</td>
+                        <td>admin@gmail.com</td>
+                        <td>123456</td>
+                        <td>Peut ajouter/modifier/supprimer un message</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+
+
+
         <?php
-        if (verifForm($_SESSION, ['user'])) {
-            $roles = json_decode($_SESSION['user']['roles']);
-            if (isset($_GET['edit']) && !empty($_GET['edit'])) {
-                if (!in_array('ROLE_ADMIN', $roles)) {
-                    //echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
-                } else {
-                    echo "<div> Vous êtes connectés en tant qu'administrateur </div>";
-                }
-            }
-        } 
+        // if (verifForm($_SESSION, ['user'])) {
+        //     $roles = json_decode($_SESSION['user']['roles']);
+        //     if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+        //         if (!in_array('ROLE_ADMIN', $roles)) {
+        //             //echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
+        //         } else {
+        //             echo "<div> Vous êtes connectés en tant qu'administrateur </div>";
+        //         }
+        //     }
+        // }
         ?>
 
 
 
 
     </header>
-    <main>
-        <section class="row" id="connect">
+    <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
+    <!-- CONNECT FORM********************************************************* -->
+    <main class="row">
+        <section class="col-12 d-flex flex-column" id="connect">
             <h2>Formulaire de connexion</h2>
-            <form method="post">
-                <div>
-                    <label for="mail">Email :</label>
-                    <input type="email" id="mail" name="mail">
+            <form class="d-flex flex-row justify-content-between" method="post">
+                <div class="input-group input_connect">
+                    <input class="form-control" type="email" id="mail" name="mail" placeholder="E-mail">
                 </div>
-                <div>
-                    <label for="pass">Mot de passe</label>
-                    <input type="password" id="motdepasse" name="motdepasse">
+                <div class="input-group input_connect">
+                    <input class="form-control" type="password" id="motdepasse" name="motdepasse" placeholder="Mot de passe">
                 </div>
-                <div>
+                <div class="align-self-center">
                     <input type="checkbox" name="remember" id="remember">
                     <label for="remember">Rester connecté(e)</label>
                 </div>
-                <button name="connect">Me connecter</button>
+                <button class="btn btn-primary" name="connect">Me connecter</button>
             </form>
-            <a href="oubli_pass.php">Mot de passe oublié ? Cliquez ici</a>
-
         </section>
-        <!-- Input to  `messages` -->
-        <section class="row" id="add-mess">
-            <div class="col-12">
+
+        <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
+        <section class="col-12" id="add-mess">
+            <div>
                 <h2><?php if (!$message) {
                         echo "Ajouter un message";
                     } else {
@@ -475,7 +515,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     };
                     ?></h2>
                 <form method="post" enctype="multipart/form-data">
-                    <div class="input-group">
+                    <div class="input-group input_msg">
                         <!-- <div class="input-group-prepend">
                             <label for="titre">Titre : </label>
                         </div> -->
@@ -486,7 +526,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                                                                                         };
                                                                                                         ?>" value="<?= $title ?>">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group input_msg">
                         <!-- <div class="input-group-prepend">
                             <label for="contenu">Contenu : </label>
                         </div> -->
@@ -497,21 +537,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                                                                                 };
                                                                                                 ?>"><?= $content ?></textarea>
                     </div>
-                    <h2>Image</h2>
-                    <div>
-                        <label for="image"> Image :</label>
-                        <input type="file" name="image" id="image">
-                    </div>
-
-                    <h2>Catégories</h2>
+                    <!-- IMAGE CATEGORIE ET BOUTON -->
                     <div class="d-flex flex-row justify-content-between">
-                        <!-- SELECT MENU FROM `categories`-->
-                        <div>
+                        <!-- IMAGE -->
+                        <div class="align-self-center">
+                            <label for="image"> Image :</label>
+                            <input type="file" name="image" id="image">
+                        </div>
+                        <!-- CATEGORIE  -->
+                        <div class="align-self-center">
                             <label for="categories">Catégories</label>
-                            <!-- Need to know which category has the message when updating it -->
-                            <?php
-
-                            ?>
                             <select id="categories" name="categories" <?= $selected ?>>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
@@ -522,18 +557,21 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                             </select>
                         </div>
-                        <button name="message" class="btn btn-primary">
-                            <!-- change the button if post a new message or update an old one -->
-                            <?php if (!$message) {
-                                echo "Ajouter le message";
-                            } else {
-                                echo "Modifier le message";
-                            };
-                            ?>
-
-                        </button>
+                        <!-- BOUTONS -->
+                        <div>
+                            <button name="message" class="btn btn-success">
+                                <!-- change the button if post a new message or update an old one -->
+                                <?php if (!$message) {
+                                    echo "Ajouter le message";
+                                } else {
+                                    echo "Modifier le message";
+                                };
+                                ?>
+                            </button>
+                        </div>
                     </div>
-                </form>
+            </div>
+            </form>
             </div>
         </section>
 
@@ -542,7 +580,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <section id="display-mess">
             <h2>Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-                <section class="row">
+                <section class="col-12">
                     <!-- BUTTONS & TITLE -->
                     <div class="align-self-center col-12 d-flex flex-row justify-content-between">
                         <h2><a><?= $message['title'] ?> </a></h2>
