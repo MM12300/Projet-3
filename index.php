@@ -1,22 +1,5 @@
 <!-- Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog -->
 
-<!-- PHP : 
-- READ : collect categorie information to display in the form/select 
-- FORM : checking/security
-    - CREATE : new input in `messages`  `messages_categories`
-    - CREATE : new input in `messages_categories`
-    - READ : display inputs from `messages`
-
-HTML :
-- #add-mess : FORM for user
-- #display-mess : Show all from `messages` with `messages_categories` -->
-
-
-<!-- 
-$_SESSION : User with admin rights :
-    => Etoilenoire@gmail.com
-    => mdp : 123456 -->
-
 
 
 <?php
@@ -26,6 +9,7 @@ $message = null;
 $alertConnectRequired = '';
 $alertAdminRequired = '';
 $connected = '';
+$alertConnexion = '';
 
 
 //SESSION
@@ -38,24 +22,6 @@ require_once('inc/lib.php');
 //********************************************************************************************************************************************************* */
 //* $_SESSION UTILISATEUR
 //*********** */
-
-//A SUPPRIMER À LA FIN 
-
-//Checking user's roles
-if (verifForm($_SESSION, ['user'])) {
-    //if there is a user connected, we check his role
-    $roles = json_decode($_SESSION['user']['roles']);
-    if (!in_array('ROLE_ADMIN', $roles)) {
-        //$notAdmin = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
-    } else {
-        $isAdmin = "Vous êtes connectés en tant qu'administrateur";
-    }
-} else {
-    $noUser = "Il n'y a pas d'utilisateurs connectés";
-}
-
-
-
 
 //********************************************************************* USER'S CONNECTION */
 if (isset($_POST['connect'])) {
@@ -70,7 +36,8 @@ if (isset($_POST['connect'])) {
             $query->execute();
             $user = $query->fetch(PDO::FETCH_ASSOC);
             if (!$user) {
-                echo 'Email et/ou mot de passe invalide';
+                $alertConnexion = "Email et/ou mot de passe invalide";
+                //echo 'Email et/ou mot de passe invalide';
                 die();
             } else {
                 if (password_verify($pass, $user['password'])) {
@@ -95,22 +62,21 @@ if (isset($_POST['connect'])) {
                         header('Location: index.php');
                     }
                 } else {
-                    echo "Email et/ou mot de passe invalide";
+                    //echo "Email et/ou mot de passe invalide";
+                    $alertConnexion = "Email et/ou mot de passe invalide";
                 }
             }
         } else {
-            echo "Veuillez renseigner votre mot passe ET votre email";
+            //echo "Veuillez renseigner votre mot passe ET votre email";
+            $alertConnexion = "Email et/ou mot de passe invalide";
         }
     }
 }
-
-
 //************************************************************************************************************************************************************************************************** */
 //***** READ - `categories` */
 $sql = 'SELECT * FROM `categories` ORDER BY `name` ASC;';
 $query = $db->query($sql); //Query method
 $categories = $query->fetchALl(PDO::FETCH_ASSOC);
-
 
 //***** READ - `messages` && `messages_categories : JOIN */
 $sql = 'SELECT `messages`.*,
@@ -135,11 +101,9 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     if (verifForm($_SESSION, ['user'])) {
         //if there is a user connected, we check his role
         $roles = json_decode($_SESSION['user']['roles']);
-
         if (!in_array('ROLE_ADMIN', $roles)) {
             $alertAdminRequired = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         } else {
-
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['delete']);
             $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
@@ -175,18 +139,10 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
                     }
                 }
             }
-            //On redirige vers la page art_admin
             header('Location: index.php');
         }
     }
 }
-
-
-
-// else {
-//     //header('Location: index.php');
-//     echo "message d'erreur";
-// }
 
 //************************************************************************************************************************************************************************************************** */
 
@@ -197,8 +153,6 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     if (verifForm($_SESSION, ['user'])) {
         if (in_array('ROLE_ADMIN', $roles)) {
-
-
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['edit']);
             $sql = 'SELECT * FROM `messages` WHERE `id` = :id;';
@@ -220,7 +174,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $query->bindValue(':id', $id, PDO::PARAM_INT);
             $query->execute();
             $message_cat = $query->fetch(PDO::FETCH_ASSOC);
-            //setting selected empty
+
             $selected = "";
             if ($message_cat['messages_id'] == $message['id']) {
                 $selected = 'selected';
@@ -233,8 +187,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         $title = strip_tags($_POST['titre']);
                         $content = strip_tags($_POST['contenu']);
                         $id = strip_tags($_GET['edit']);
-
-
                         //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                         if (isset($_FILES) && !empty($_FILES)) {
                             if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
@@ -294,8 +246,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $query->bindValue(':user_id', 1, PDO::PARAM_INT);
                             $query->execute();
                         }
-
-
                         ////*****DELETE : `messages_categories` (to replace by new entries) */
                         $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
                         $query = $db->prepare($sql);
@@ -330,7 +280,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     $titre = strip_tags($_POST['titre']);
                     $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
                     $categories = strip_tags($_POST['categories']);
-
                     //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                     if (isset($_FILES) && !empty($_FILES)) {
                         if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
@@ -363,7 +312,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             thumb(300, $image_name);
                         }
                     }
-
                     ////*****CREATE : `messages_categories` */
                     $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
                     $query = $db->prepare($sql); //Prepare method
@@ -372,7 +320,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     $query->bindValue(':image', $image_name, PDO::PARAM_STR);
                     $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
                     $query->execute();
-
                     //collecting the message_id for the next step
                     $idMessage = $db->lastInsertId();
 
@@ -385,8 +332,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                     header('Location: index.php');
                 } else {
-                    //On affiche un warning si l'utilisateur n'a pas remplis le formulaire
-                    //les images ne seront par obligatoires
                     echo "Attention il faut indiquer un titre, des catégories et un contenu";
                 }
             }
@@ -395,9 +340,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         }
     }
 }
-
-//if (verifForm($_SESSION, ['user'])){
-//var_dump($_SESSION);
 //************************************************************************************************************************************************************************************************** */
 ?>
 
@@ -419,11 +361,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <h1>Le C.R.U.D. sur une page</h1>
     <header class="row">
         <div id="alerts">
+            <!-- alert when user/admin try to connect -->
+            <?= $alertConnexion ?>
             <?php if (verifForm($_SESSION, ['user'])) : ?>
+                <!-- shows who is connected -->
                 <p><?= $_SESSION['user']['name'] ?> est connecté</p>
             <?php else : ?>
+                <!-- alert when user/admin connexion needed -->
                 <?= $alertConnectRequired ?>
             <?php endif ?>
+            <!-- admin role needed -->
             <p><?= $alertAdminRequired ?></p>
         </div>
         <div id="intro">
@@ -432,58 +379,38 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             <p>Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message. Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
             <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p>
             <div class="d-flex justify-content-center">
-            <table class="table tableau">
-                <thead>
-                    <tr>
-                        <th scope="col">Type d'utilisateur</th>
-                        <th scope="col">E-mail</th>
-                        <th scope="col">Mot de passe</th>
-                        <th scope="col">Fonctionnalité</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Non-connecté</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>Ne peut pas poster de message</td>
-                    </tr>
-                    <tr>
-                        <td>Utilisateur classique</td>
-                        <td>user@gmail.com</td>
-                        <td>654321</td>
-                        <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
-                    </tr>
-                    <tr>
-                        <td>Administrateur</td>
-                        <td>admin@gmail.com</td>
-                        <td>123456</td>
-                        <td>Peut ajouter/modifier/supprimer un message</td>
-                    </tr>
-                </tbody>
-            </table>
+                <table class="table tableau">
+                    <thead>
+                        <tr>
+                            <th scope="col">Type d'utilisateur</th>
+                            <th scope="col">E-mail</th>
+                            <th scope="col">Mot de passe</th>
+                            <th scope="col">Fonctionnalité</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Non-connecté</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>Ne peut pas poster de message</td>
+                        </tr>
+                        <tr>
+                            <td>Utilisateur classique</td>
+                            <td>user@gmail.com</td>
+                            <td>654321</td>
+                            <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
+                        </tr>
+                        <tr>
+                            <td>Administrateur</td>
+                            <td>admin@gmail.com</td>
+                            <td>123456</td>
+                            <td>Peut ajouter/modifier/supprimer un message</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-
-
-
-
-        <?php
-        // if (verifForm($_SESSION, ['user'])) {
-        //     $roles = json_decode($_SESSION['user']['roles']);
-        //     if (isset($_GET['edit']) && !empty($_GET['edit'])) {
-        //         if (!in_array('ROLE_ADMIN', $roles)) {
-        //             //echo "<div> Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur </div>";
-        //         } else {
-        //             echo "<div> Vous êtes connectés en tant qu'administrateur </div>";
-        //         }
-        //     }
-        // }
-        ?>
-
-
-
-
     </header>
     <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
     <!-- CONNECT FORM********************************************************* -->
@@ -504,7 +431,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <button class="btn btn-primary" name="connect">Me connecter</button>
             </form>
         </section>
-
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
         <section class="col-12" id="add-mess">
             <div>
@@ -516,9 +442,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     ?></h2>
                 <form method="post" enctype="multipart/form-data">
                     <div class="input-group input_msg">
-                        <!-- <div class="input-group-prepend">
-                            <label for="titre">Titre : </label>
-                        </div> -->
                         <input class="form-control" type="text" id="titre" name="titre" placeholder="<?php if (!$message) {
                                                                                                             echo "Titre de votre message";
                                                                                                         } else {
@@ -527,9 +450,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                                                                                         ?>" value="<?= $title ?>">
                     </div>
                     <div class="input-group input_msg">
-                        <!-- <div class="input-group-prepend">
-                            <label for="contenu">Contenu : </label>
-                        </div> -->
                         <textarea class="form-control" name="contenu" id="contenu" placeholder="<?php if (!$message) {
                                                                                                     echo "Contenu de votre message";
                                                                                                 } else {
@@ -574,8 +494,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             </form>
             </div>
         </section>
-
-
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
             <h2>Vos messages</h2>
@@ -606,8 +524,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         </p>
                     </div>
                     <div class="col-12">
-
-
                         <?php
                         // On vérifie si l'article a un image
                         if ($message['featured_image'] != null) :
