@@ -60,3 +60,17 @@ header, main, .row, .col{
 #vosmessages{
     padding-left:20px;
 }
+
+#alerts{
+    color: #fff;
+    background-color: #c82333;
+    border-color: #bd2130;
+    border-radius:0.25rem;
+    text-align : center;
+    display : flex;
+    flex-direction:row;
+    justify-content:center;
+    margin:auto;
+    margin-top:10px;
+    padding:15px;
+}
