@@ -1,9 +1,13 @@
 /* FRAMES FOR LAYOUT */
 #display-mess, #add-mess{
-    border:red 1px solid;
+    /* border:red 1px solid; */
     width:100%;
     margin:0;
     padding:0;
+}
+
+#alerts p{
+    margin:0;
 }
 
 
@@ -29,7 +33,30 @@ header, main, .row, .col{
 }
 
 .table{
-    text-align:center;
+    text-align:left;
     width: 90%;
     color:white;
+    margin:0;
+}
+/* *****PADDING/MARGINS*****  */
+#add-mess, #connect, #intro{
+    padding:20px;
+}
+#titre, #contenu{
+    margin-bottom:10px;
+}
+.msg-content{
+    font-size:1.5rem;
+}
+.msg-title h2{
+    font-size:2.5rem;
+}
+.date{
+    padding-left:20px;
+}
+.sectionmsg{
+    margin-bottom:20px;
+}
+#vosmessages{
+    padding-left:20px;
 }

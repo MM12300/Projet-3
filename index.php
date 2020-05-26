@@ -152,6 +152,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 //**************************** */
 if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     if (verifForm($_SESSION, ['user'])) {
+        $roles = json_decode($_SESSION['user']['roles']);
         if (in_array('ROLE_ADMIN', $roles)) {
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['edit']);
@@ -224,9 +225,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 } else {
                                     echo "Le fichier a été uploadé";
                                 }
-                                resizeImage($image_name, 75);
-                                resizeImage($image_name, 25);
-                                thumb(300, $image_name);
+                                thumb(100, $image_name);
                                 //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
                                 $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
                                 $query = $db->prepare($sql);
@@ -307,8 +306,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             } else {
                                 echo "Le fichier a été uploadé";
                             }
-                            resizeImage($image_name, 75);
-                            resizeImage($image_name, 25);
                             thumb(300, $image_name);
                         }
                     }
@@ -428,7 +425,46 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     <input type="checkbox" name="remember" id="remember">
                     <label for="remember">Rester connecté(e)</label>
                 </div>
-                <button class="btn btn-primary" name="connect">Me connecter</button>
+
+
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+
+                <?php
+                if (isset($_SESSION)) : ?>
+                    <?php
+                    if (verifForm($_SESSION, ['user'])) : ?>
+                        <?php
+                        $roles = json_decode($_SESSION['user']['roles']);
+                        if (!in_array('ROLE_ADMIN', $roles)) : ?>
+                            <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
+                        <?php endif ?>
+                    <?php endif ?>
+                    <button class="btn btn-primary" name="connect">Me connecter</button>
+                <?php endif ?>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
+
+
+
+
+
             </form>
         </section>
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
@@ -496,34 +532,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         </section>
         <!-- SHOW ALL INPUTS OF `messages` -->
         <section id="display-mess">
-            <h2>Vos messages</h2>
+            <h2 id="vosmessages">Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-                <section class="col-12">
+                <section class="col-12 sectionmsg">
                     <!-- BUTTONS & TITLE -->
-                    <div class="align-self-center col-12 d-flex flex-row justify-content-between">
-                        <h2><a><?= $message['title'] ?> </a></h2>
-                        <div class="align-self-center">
-                            <?php if (verifForm($_SESSION, ['user'])) : ?>
-                                <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                                <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <p>
-                            <!-- DATE & CATEGORIES -->
-                            Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                            par
-                            <?php
-                            $categories = explode(',', $message['categorie_name']);
-                            //Explode : transform string into an array after each ','                        
-                            foreach ($categories as $categorie) {
-                                echo '<a href="#">' . $categorie . '</a> ';
-                            }
-                            ?>
-                        </p>
-                    </div>
-                    <div class="col-12">
+
+                    <div class="d-flex flex-row">
                         <?php
                         // On vérifie si l'article a un image
                         if ($message['featured_image'] != null) :
@@ -537,9 +551,37 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                             // On affiche l'image
                         ?>
-                            <img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php
-                                                                                        endif; ?>>
-                            <?= substr(strip_tags($message['content']), 0, 300) . '...' ?>
+                            <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php
+                                                                                                                                            endif; ?>>
+                            </div>
+                            <div class="col-8 text-wrap">
+                                <div class="align-self-center d-flex flex-row justify-content-between msg-title">
+                                    <h2><a><?= $message['title'] ?> </a></h2>
+                                    <div class="align-self-center">
+                                        <?php if (verifForm($_SESSION, ['user'])) : ?>
+                                            <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                                            <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="date">
+                                        <!-- DATE & CATEGORIES -->
+                                        Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
+                                        par
+                                        <?php
+                                        $categories = explode(',', $message['categorie_name']);
+                                        //Explode : transform string into an array after each ','                        
+                                        foreach ($categories as $categorie) {
+                                            echo '<a href="#">' . $categorie . '</a> ';
+                                        }
+                                        ?>
+                                    </p>
+                                </div>
+                                <div class="msg-content">
+                                    <?= $message['content'] ?>
+                                </div>
+                            </div>
                     </div>
                 </section>
             <?php endforeach; ?>
