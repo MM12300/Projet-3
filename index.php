@@ -11,6 +11,12 @@ $alertAdminRequired = '';
 $connected = '';
 $alertConnexion = '';
 
+$_SESSION['errors'] =  null;
+//die(var_dump($_SESSION['errors']));
+
+
+
+
 
 //SESSION
 session_start();
@@ -36,9 +42,7 @@ if (isset($_POST['connect'])) {
             $query->execute();
             $user = $query->fetch(PDO::FETCH_ASSOC);
             if (!$user) {
-                $alertConnexion = "Email et/ou mot de passe invalide";
-                //echo 'Email et/ou mot de passe invalide';
-                die();
+                $_SESSION['connected'] = "Aucun utilisateur connecté";
             } else {
                 if (password_verify($pass, $user['password'])) {
                     $_SESSION['user'] = [
@@ -62,15 +66,22 @@ if (isset($_POST['connect'])) {
                         header('Location: index.php');
                     }
                 } else {
-                    //echo "Email et/ou mot de passe invalide";
-                    $alertConnexion = "Email et/ou mot de passe invalide";
+                    $_SESSION['errors'] = "Email et/ou mot de passe invalide2";
                 }
             }
         } else {
-            //echo "Veuillez renseigner votre mot passe ET votre email";
-            $alertConnexion = "Email et/ou mot de passe invalide";
+            $_SESSION['errors'] = "Email et/ou mot de passe invalide3";
         }
     }
+}
+//********************************************************************* USER'S DISCONNECTION */
+if (isset($_POST['disconnect'])) {
+    unset($_SESSION['user']);
+
+    // On efface l'éventuel cookie 'remember'
+    setcookie('remember', '', 1);
+
+    header('Location: index.php');
 }
 //************************************************************************************************************************************************************************************************** */
 //***** READ - `categories` */
@@ -102,7 +113,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         //if there is a user connected, we check his role
         $roles = json_decode($_SESSION['user']['roles']);
         if (!in_array('ROLE_ADMIN', $roles)) {
-            $alertAdminRequired = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            $_SESSION['errors'] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         } else {
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['delete']);
@@ -112,10 +123,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
             $query->execute();
             $message = $query->fetch(PDO::FETCH_ASSOC);
             if (!$message) {
-                //header('Location: index.php');
-                echo "le message que vous voulez supprimer n'existe pas";
+                $_SESSION['errors'] = "le message que vous voulez supprimer n'existe pas";
             }
-
             //***** DELETE - from `messages_categories`*/
             $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
             $query = $db->prepare($sql);
@@ -203,27 +212,22 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 }
                                 $image = $_FILES['image'];
                                 if ($image['error'] != 0) {
-                                    echo "Une erreur s'\est produite lors du chargement de votre fichier";
-                                    die;
+                                    $_SESSION['errors'] = "Une erreur s'\est produite lors du chargement de votre fichier";
                                 }
                                 $types = ['image/png', 'image/jpeg'];
                                 if (!in_array($image['type'], $types)) {
-                                    $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
-                                    header('Location:art_ajout.php');
-                                    die;
+                                    $_SESSION['errors'] = "le type de fichier doit être un jpeg ou png";
                                 }
                                 if ($image['size'] > 1048576) {
-                                    echo "Le fichier est trop volumineux";
-                                    die;
+                                    $_SESSION['errors'] = "Le fichier est trop volumineux";
                                 }
                                 $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
                                 $image_name = md5(uniqid()) . '.' . $extension;
                                 $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
                                 if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                                    echo "le fichier n'a pas été copié";
-                                    die;
+                                    $_SESSION['errors'] = "le fichier n'a pas été copié";
                                 } else {
-                                    echo "Le fichier a été uploadé";
+                                    $_SESSION['errors'] = "Le fichier a été uploadé";
                                 }
                                 thumb(100, $image_name);
                                 //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
@@ -263,7 +267,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 }
             }
         } else {
-            $alertAdminRequired = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            $_SESSION['errors'] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         }
     }
     //************************************************************************************************************************************************************************************************** */
@@ -284,18 +288,14 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
                             $image = $_FILES['image'];
                             if ($image['error'] != 0) {
-                                echo "Une erreur s'\est produite lors du chargement de votre fichier";
-                                die;
+                                $_SESSION['errors'] = "Une erreur s'\est produite lors du chargement de votre fichier";
                             }
                             $types = ['image/png', 'image/jpeg'];
                             if (!in_array($image['type'], $types)) {
-                                $_SESSION['error'] = "le type de fichier doit être un jpeg ou png";
-                                header('Location:art_ajout.php');
-                                die;
+                                $_SESSION['errors'] = "le type de fichier doit être un jpeg ou png";
                             }
                             if ($image['size'] > 1048576) {
-                                echo "Le fichier est trop volumineux";
-                                die;
+                                $_SESSION['errors'] = "Le fichier est trop volumineux";
                             }
                             $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
                             $image_name = md5(uniqid()) . '.' . $extension;
@@ -329,11 +329,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                     header('Location: index.php');
                 } else {
-                    echo "Attention il faut indiquer un titre, des catégories et un contenu";
+                    $_SESSION['errors'] = "Attention il faut indiquer un titre, des catégories et un contenu";
                 }
             }
         } else {
-            $alertConnectRequired = "Vous devez vous connecter pour écrire un message";
+            $_SESSION['errors'] = "Vous devez vous connecter pour écrire un message";
         }
     }
 }
@@ -357,19 +357,26 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 <body class="container">
     <h1>Le C.R.U.D. sur une page</h1>
     <header class="row">
+        <!-- ----------------- ERRORS -->
+
+        <?php
+        if (isset($_SESSION['connected'])) {
+            echo $_SESSION['connected'];
+        }
+        ?>
+        <?php if (!empty($_SESSION['errors'])) : ?>
         <div id="alerts">
-            <!-- alert when user/admin try to connect -->
-            <?= $alertConnexion ?>
-            <?php if (verifForm($_SESSION, ['user'])) : ?>
-                <!-- shows who is connected -->
-                <p><?= $_SESSION['user']['name'] ?> est connecté</p>
-            <?php else : ?>
-                <!-- alert when user/admin connexion needed -->
-                <?= $alertConnectRequired ?>
-            <?php endif ?>
-            <!-- admin role needed -->
-            <p><?= $alertAdminRequired ?></p>
+            <?= $_SESSION['errors'] ?>
         </div>
+        <?php endif ?>
+
+        <?php if (verifForm($_SESSION, ['user'])) : ?>
+        <!-- shows who is connected -->
+        <div id="alerts">
+            <p><?= $_SESSION['user']['name'] ?> est connecté</p>
+        </div>
+        <?php endif ?>
+
         <div id="intro">
             <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
             <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>j'ai décidé de créer une page qui s'apparente à une livre d'or ou à une section de commentaire de base de page comme on peut en retrouver sur les sites d'e-commerce. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO).</p>
@@ -440,15 +447,15 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                 <?php
                 if (isset($_SESSION)) : ?>
-                    <?php
+                <?php
                     if (verifForm($_SESSION, ['user'])) : ?>
-                        <?php
+                <?php
                         $roles = json_decode($_SESSION['user']['roles']);
-                        if (!in_array('ROLE_ADMIN', $roles)) : ?>
-                            <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
-                        <?php endif ?>
-                    <?php endif ?>
-                    <button class="btn btn-primary" name="connect">Me connecter</button>
+                        if (in_array('ROLE_ADMIN', $roles)) : ?>
+                <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
+                <?php endif ?>
+                <?php endif ?>
+                <button class="btn btn-primary" name="connect">Me connecter</button>
                 <?php endif ?>
                 <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
                 <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
@@ -506,9 +513,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             <select id="categories" name="categories" <?= $selected ?>>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                    <div>
-                                        <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
-                                    </div>
+                                <div>
+                                    <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                                </div>
                                 <?php endforeach; ?>
 
                             </select>
@@ -534,11 +541,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <section id="display-mess">
             <h2 id="vosmessages">Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-                <section class="col-12 sectionmsg">
-                    <!-- BUTTONS & TITLE -->
+            <section class="col-12 sectionmsg">
+                <!-- BUTTONS & TITLE -->
 
-                    <div class="d-flex flex-row">
-                        <?php
+                <div class="d-flex flex-row">
+                    <?php
                         // On vérifie si l'article a un image
                         if ($message['featured_image'] != null) :
                             // On a une image, on la traite et on l'affiche
@@ -550,40 +557,40 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $image = $nom_image . '-300x300.' . $extension;
 
                             // On affiche l'image
-                        ?>
-                            <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php
+                            ?>
+                    <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>" alt="<?= $message['title'] ?>" <?php
                                                                                                                                             endif; ?>>
-                            </div>
-                            <div class="col-8 text-wrap">
-                                <div class="align-self-center d-flex flex-row justify-content-between msg-title">
-                                    <h2><a><?= $message['title'] ?> </a></h2>
-                                    <div class="align-self-center">
-                                        <?php if (verifForm($_SESSION, ['user'])) : ?>
-                                            <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                                            <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="date">
-                                        <!-- DATE & CATEGORIES -->
-                                        Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                                        par
-                                        <?php
-                                        $categories = explode(',', $message['categorie_name']);
-                                        //Explode : transform string into an array after each ','                        
-                                        foreach ($categories as $categorie) {
-                                            echo '<a href="#">' . $categorie . '</a> ';
-                                        }
-                                        ?>
-                                    </p>
-                                </div>
-                                <div class="msg-content">
-                                    <?= $message['content'] ?>
-                                </div>
-                            </div>
                     </div>
-                </section>
+                    <div class="col-8 text-wrap">
+                        <div class="align-self-center d-flex flex-row justify-content-between msg-title">
+                            <h2><a><?= $message['title'] ?> </a></h2>
+                            <div class="align-self-center">
+                                <?php if (verifForm($_SESSION, ['user'])) : ?>
+                                <a class="btn btn-warning align-self-center" href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                                <a class="btn btn-danger align-self-center" href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="date">
+                                <!-- DATE & CATEGORIES -->
+                                Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
+                                par
+                                <?php
+                                    $categories = explode(',', $message['categorie_name']);
+                                    //Explode : transform string into an array after each ','                        
+                                    foreach ($categories as $categorie) {
+                                        echo '<a href="#">' . $categorie . '</a> ';
+                                    }
+                                    ?>
+                            </p>
+                        </div>
+                        <div class="msg-content">
+                            <?= $message['content'] ?>
+                        </div>
+                    </div>
+                </div>
+            </section>
             <?php endforeach; ?>
         </section>
     </main>
