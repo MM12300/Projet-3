@@ -10,8 +10,8 @@ $alertConnectRequired = '';
 $alertAdminRequired = '';
 $connected = '';
 $alertConnexion = '';
+$erreurs = [];
 
-$_SESSION['errors'] =  null;
 //die(var_dump($_SESSION['errors']));
 
 
@@ -42,7 +42,7 @@ if (isset($_POST['connect'])) {
             $query->execute();
             $user = $query->fetch(PDO::FETCH_ASSOC);
             if (!$user) {
-                $_SESSION['connected'] = "Aucun utilisateur connecté";
+                $erreurs[] = "Email et/ou mot de passe invalide4";
             } else {
                 if (password_verify($pass, $user['password'])) {
                     $_SESSION['user'] = [
@@ -66,11 +66,11 @@ if (isset($_POST['connect'])) {
                         header('Location: index.php');
                     }
                 } else {
-                    $_SESSION['errors'] = "Email et/ou mot de passe invalide2";
+                    $erreurs[] = "Email et/ou mot de passe invalide2";
                 }
             }
         } else {
-            $_SESSION['errors'] = "Email et/ou mot de passe invalide3";
+            $erreurs[] = "Email et/ou mot de passe invalide : veuillez saisir un mot de passe ET un identifiant";
         }
     }
 }
@@ -113,7 +113,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         //if there is a user connected, we check his role
         $roles = json_decode($_SESSION['user']['roles']);
         if (!in_array('ROLE_ADMIN', $roles)) {
-            $_SESSION['errors'] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            $erreurs[] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            header('Location: index.php');
         } else {
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['delete']);
@@ -123,7 +124,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
             $query->execute();
             $message = $query->fetch(PDO::FETCH_ASSOC);
             if (!$message) {
-                $_SESSION['errors'] = "le message que vous voulez supprimer n'existe pas";
+                $erreurs[] = "le message que vous voulez supprimer n'existe pas";
             }
             //***** DELETE - from `messages_categories`*/
             $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
@@ -212,22 +213,22 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 }
                                 $image = $_FILES['image'];
                                 if ($image['error'] != 0) {
-                                    $_SESSION['errors'] = "Une erreur s'\est produite lors du chargement de votre fichier";
+                                    $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
                                 }
                                 $types = ['image/png', 'image/jpeg'];
                                 if (!in_array($image['type'], $types)) {
-                                    $_SESSION['errors'] = "le type de fichier doit être un jpeg ou png";
+                                    $erreurs[] = "le type de fichier doit être un jpeg ou png";
                                 }
                                 if ($image['size'] > 1048576) {
-                                    $_SESSION['errors'] = "Le fichier est trop volumineux";
+                                    $erreurs[] = "Le fichier est trop volumineux";
                                 }
                                 $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
                                 $image_name = md5(uniqid()) . '.' . $extension;
                                 $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
                                 if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                                    $_SESSION['errors'] = "le fichier n'a pas été copié";
+                                    $erreurs[] = "le fichier n'a pas été copié";
                                 } else {
-                                    $_SESSION['errors'] = "Le fichier a été uploadé";
+                                    $erreurs[] = "Le fichier a été uploadé";
                                 }
                                 thumb(100, $image_name);
                                 //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
@@ -267,7 +268,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 }
             }
         } else {
-            $_SESSION['errors'] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+            header('Location: index.php');
+            $erreurs[] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
+
         }
     }
     //************************************************************************************************************************************************************************************************** */
@@ -277,66 +280,88 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     //** CREATING ONE MESSAGE */ */
     //**************************** */
     if (isset($_POST['message'])) {
-        if (verifForm($_SESSION, ['user'])) {
-            if (isset($_POST) && !empty($_POST)) {
+        //die(var_dump('entrée dans le form'));
+        if (verifForm($_SESSION, ['user'])) {      
+            if (isset($_POST) && !empty($_POST) && $_POST['categories'] != "5") {        
                 if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
+                    
                     $titre = strip_tags($_POST['titre']);
                     $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
                     $categories = strip_tags($_POST['categories']);
-                    //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-                    if (isset($_FILES) && !empty($_FILES)) {
-                        if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                            $image = $_FILES['image'];
-                            if ($image['error'] != 0) {
-                                $_SESSION['errors'] = "Une erreur s'\est produite lors du chargement de votre fichier";
-                            }
-                            $types = ['image/png', 'image/jpeg'];
-                            if (!in_array($image['type'], $types)) {
-                                $_SESSION['errors'] = "le type de fichier doit être un jpeg ou png";
-                            }
-                            if ($image['size'] > 1048576) {
-                                $_SESSION['errors'] = "Le fichier est trop volumineux";
-                            }
-                            $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                            $image_name = md5(uniqid()) . '.' . $extension;
-                            $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                            if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                                echo "le fichier n'a pas été copié";
-                                die;
-                            } else {
-                                echo "Le fichier a été uploadé";
-                            }
-                            thumb(300, $image_name);
-                        }
-                    }
-                    ////*****CREATE : `messages_categories` */
-                    $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
-                    $query = $db->prepare($sql); //Prepare method
-                    $query->bindValue(':titre', $titre, PDO::PARAM_STR);
-                    $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
-                    $query->bindValue(':image', $image_name, PDO::PARAM_STR);
-                    $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
-                    $query->execute();
-                    //collecting the message_id for the next step
-                    $idMessage = $db->lastInsertId();
-
-                    //***** CREATE - `messages_categories`
-                    $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                    $query = $db->prepare($sql); //Prepare method
-                    $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
-                    $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
-                    $query->execute();
-
-                    header('Location: index.php');
-                } else {
-                    $_SESSION['errors'] = "Attention il faut indiquer un titre, des catégories et un contenu";
+                
+                //***CONDITION : content should be 30chars minimum
+                //die(var_dump(strlen($contenu)));
+                if ((strlen($contenu) < 30)) {
+                    $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
                 }
+                
+                //***CONDITION : content should be 30chars minimum
+                if ((strlen($titre) < 3)) {
+                    $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
+                }
+                
+
+
+
+                //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                if (isset($_FILES) && !empty($_FILES)) {
+                    if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                        $image = $_FILES['image'];
+                        if ($image['error'] != 0) {
+                            $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
+                        }
+                        $types = ['image/png', 'image/jpeg'];
+                        if (!in_array($image['type'], $types)) {
+                            $erreurs[] = "le type de fichier doit être un jpeg ou png";
+                        }
+                        if ($image['size'] > 1048576) {
+                            $erreurs[] = "Le fichier est trop volumineux";
+                        }
+                        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                        $image_name = md5(uniqid()) . '.' . $extension;
+                        $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                        if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                            echo "le fichier n'a pas été copié";
+                            die;
+                        } else {
+                            echo "Le fichier a été uploadé";
+                        }
+                        thumb(300, $image_name);
+                    }
+                }
+
+                
+                    
+                    if (isset($errors)) {
+                        die('test');
+                        ////*****CREATE : `messages_categories` */
+                        $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
+                        $query = $db->prepare($sql); //Prepare method
+                        $query->bindValue(':titre', $titre, PDO::PARAM_STR);
+                        $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
+                        $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                        $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
+                        $query->execute();
+                        //collecting the message_id for the next step
+                        $idMessage = $db->lastInsertId();
+
+                        //***** CREATE - `messages_categories`
+                        $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                        $query = $db->prepare($sql); //Prepare method
+                        $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
+                        $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
+                        $query->execute();
+
+                        header('Location: index.php');
+                    };
+                }
+            } else {
+                $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message2";
             }
-        } else {
-            $_SESSION['errors'] = "Vous devez vous connecter pour écrire un message";
         }
     }
 }
+
 //************************************************************************************************************************************************************************************************** */
 ?>
 
@@ -359,22 +384,30 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <header class="row">
         <!-- ----------------- ERRORS -->
 
-        <?php
-        if (isset($_SESSION['connected'])) {
-            echo $_SESSION['connected'];
-        }
-        ?>
-        <?php if (!empty($_SESSION['errors'])) : ?>
-        <div id="alerts">
-            <?= $_SESSION['errors'] ?>
-        </div>
-        <?php endif ?>
 
-        <?php if (verifForm($_SESSION, ['user'])) : ?>
-        <!-- shows who is connected -->
+        <?php if (!empty($erreurs)) : ?>
+        <?php foreach ($erreurs as $erreur) : ?>
+        <div> Attention vous avez un problème : <?= $erreur ?> </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+
+        <?php
+        if (isset($_SESSION)) : ?>
+        <?php
+            if (verifForm($_SESSION, ['user'])) : ?>
+        <?php
+                $roles = json_decode($_SESSION['user']['roles']);
+                if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
         <div id="alerts">
             <p><?= $_SESSION['user']['name'] ?> est connecté</p>
         </div>
+        <?php endif ?>
+        <?php else : ?>
+        <div id="alerts">
+            <p>Aucun utilisateur connecté</p>
+        </div>
+        <?php endif ?>
+
         <?php endif ?>
 
         <div id="intro">
@@ -451,7 +484,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     if (verifForm($_SESSION, ['user'])) : ?>
                 <?php
                         $roles = json_decode($_SESSION['user']['roles']);
-                        if (in_array('ROLE_ADMIN', $roles)) : ?>
+                        if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
                 <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
                 <?php endif ?>
                 <?php endif ?>
@@ -511,6 +544,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <div class="align-self-center">
                             <label for="categories">Catégories</label>
                             <select id="categories" name="categories" <?= $selected ?>>
+                            <option type="text" value="5"> Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
                                 <div>
