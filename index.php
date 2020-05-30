@@ -284,19 +284,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         if (verifForm($_SESSION, ['user'])) {      
             if (isset($_POST) && !empty($_POST) && $_POST['categories'] != "5") {        
                 if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-                    
                     $titre = strip_tags($_POST['titre']);
                     $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
-                    $categories = strip_tags($_POST['categories']);
+                    $categorie = strip_tags($_POST['categories']);
                 
                 //***CONDITION : content should be 30chars minimum
                 //die(var_dump(strlen($contenu)));
-                if ((strlen($contenu) < 30)) {
+                if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
                     $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
                 }
                 
                 //***CONDITION : content should be 30chars minimum
-                if ((strlen($titre) < 3)) {
+                if ((strlen($titre) < 3) || (strlen($contenu) > 30)) {
                     $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
                 }
                 
@@ -333,7 +332,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 
                     
                     if (isset($errors)) {
-                        die('test');
                         ////*****CREATE : `messages_categories` */
                         $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
                         $query = $db->prepare($sql); //Prepare method
@@ -354,9 +352,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                         header('Location: index.php');
                     };
+                }else {
+                    $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message2";
                 }
             } else {
-                $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message2";
+                $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
             }
         }
     }
@@ -543,15 +543,29 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <!-- CATEGORIE  -->
                         <div class="align-self-center">
                             <label for="categories">Catégories</label>
-                            <select id="categories" name="categories" <?= $selected ?>>
-                            <option type="text" value="5"> Choisir une catégorie</option>
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
+                            <select id="categories" name="categories"<?= $selected ?>>
+                            <option type="text" value="5">Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                <div>
                                     <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
-                                </div>
                                 <?php endforeach; ?>
-
                             </select>
                         </div>
                         <!-- BOUTONS -->
