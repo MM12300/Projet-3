@@ -9,6 +9,7 @@ $alertAdminRequired = '';
 $connected = '';
 $alertConnexion = '';
 $erreurs = [];
+$selected = '';
 
 //SESSION
 session_start();
@@ -164,103 +165,106 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             $query->execute();
             $message = $query->fetch(PDO::FETCH_ASSOC);
 
-            $title = $message['title'];
-            $content = $message['content'];
             if (!$message) {
                 //header('Location: index.php');
-                echo "le message que vous voulez modifier n'existe pas";
-            };
+                $erreurs[] =  "le message que vous voulez modifier n'existe pas";
+            } else {
 
-            //*****READ - If message exists we want to know its category
-            $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
-            $query = $db->prepare($sql);
-            $query->bindValue(':id', $id, PDO::PARAM_INT);
-            $query->execute();
-            $message_cat = $query->fetch(PDO::FETCH_ASSOC);
+                $title = $message['title'];
+                $content = $message['content'];
 
-            $selected = "";
-            if ($message_cat['messages_id'] == $message['id']) {
-                $selected = 'selected';
-            }
 
-            //***CONDITION : $_POST */
-            if (isset($_POST['message'])) {
-                if (isset($_POST) && !empty($_POST)) {
-                    if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-                        $title = strip_tags($_POST['titre']);
-                        $content = strip_tags($_POST['contenu']);
-                        $id = strip_tags($_GET['edit']);
-                        //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-                        if (isset($_FILES) && !empty($_FILES)) {
-                            if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                                //DELETING OLD IMAGES
-                                if ($message['featured_image'] != null) {
-                                    $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                                    $fichiers = scandir(__DIR__ . '/uploads/');
-                                    foreach ($fichiers as $fichier) {
-                                        if (strpos($fichier, $debutNom) === 0) {
-                                            unlink(__DIR__ . '/uploads/' . $fichier);
+                //*****READ - If message exists we want to know its category
+                $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
+                $query = $db->prepare($sql);
+                $query->bindValue(':id', $id, PDO::PARAM_INT);
+                $query->execute();
+                $message_cat = $query->fetch(PDO::FETCH_ASSOC);
+
+                
+                if ($message_cat['messages_id'] == $message['id']) {
+                    $selected = 'selected';
+                }
+
+                //***CONDITION : $_POST */
+                if (isset($_POST['message'])) {
+                    if (isset($_POST) && !empty($_POST)) {
+                        if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
+                            $title = strip_tags($_POST['titre']);
+                            $content = strip_tags($_POST['contenu']);
+                            $id = strip_tags($_GET['edit']);
+
+                            //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                            if (isset($_FILES) && !empty($_FILES)) {
+                                if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                                    //DELETING OLD IMAGES
+                                    if ($message['featured_image'] != null) {
+                                        $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                                        $fichiers = scandir(__DIR__ . '/uploads/');
+                                        foreach ($fichiers as $fichier) {
+                                            if (strpos($fichier, $debutNom) === 0) {
+                                                unlink(__DIR__ . '/uploads/' . $fichier);
+                                            }
                                         }
                                     }
+                                    $image = $_FILES['image'];
+                                    if ($image['error'] != 0) {
+                                        $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
+                                    }
+                                    $types = ['image/png', 'image/jpeg'];
+                                    if (!in_array($image['type'], $types)) {
+                                        $erreurs[] = "le type de fichier doit être un jpeg ou png";
+                                    }
+                                    if ($image['size'] > 1048576) {
+                                        $erreurs[] = "Le fichier est trop volumineux";
+                                    }
+                                    $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                                    $image_name = md5(uniqid()) . '.' . $extension;
+                                    $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                                    if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                                        $erreurs[] = "le fichier n'a pas été copié";
+                                    } else {
+                                        $erreurs[] = "Le fichier a été uploadé";
+                                    }
+                                    thumb(100, $image_name);
+                                    //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
+                                    $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                                    $query = $db->prepare($sql);
+                                    $query->bindValue(':title', $title, PDO::PARAM_STR);
+                                    $query->bindValue(':content', $content, PDO::PARAM_STR);
+                                    $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                                    $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                                    $query->bindValue(':image', $image_name, PDO::PARAM_STR);
+                                    $query->execute();
                                 }
-                                $image = $_FILES['image'];
-                                if ($image['error'] != 0) {
-                                    $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
-                                }
-                                $types = ['image/png', 'image/jpeg'];
-                                if (!in_array($image['type'], $types)) {
-                                    $erreurs[] = "le type de fichier doit être un jpeg ou png";
-                                }
-                                if ($image['size'] > 1048576) {
-                                    $erreurs[] = "Le fichier est trop volumineux";
-                                }
-                                $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                                $image_name = md5(uniqid()) . '.' . $extension;
-                                $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                                if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                                    $erreurs[] = "le fichier n'a pas été copié";
-                                } else {
-                                    $erreurs[] = "Le fichier a été uploadé";
-                                }
-                                thumb(100, $image_name);
-                                //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
-                                $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                                //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
+                                $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
                                 $query = $db->prepare($sql);
                                 $query->bindValue(':title', $title, PDO::PARAM_STR);
                                 $query->bindValue(':content', $content, PDO::PARAM_STR);
                                 $query->bindvalue(':id', $id, PDO::PARAM_INT);
                                 $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                                $query->bindValue(':image', $image_name, PDO::PARAM_STR);
                                 $query->execute();
                             }
-                            //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
-                            $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                            ////*****DELETE : `messages_categories` (to replace by new entries) */
+                            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
                             $query = $db->prepare($sql);
-                            $query->bindValue(':title', $title, PDO::PARAM_STR);
-                            $query->bindValue(':content', $content, PDO::PARAM_STR);
                             $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                            $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                            $query->execute();
+                            $category = $_POST['categories'];
+
+                            ////*****CREATE : `messages_categories` */
+                            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                            $query = $db->prepare($sql);
+                            $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
+                            $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
                             $query->execute();
                         }
-                        ////*****DELETE : `messages_categories` (to replace by new entries) */
-                        $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-                        $query = $db->prepare($sql);
-                        $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                        $query->execute();
-                        $category = $_POST['categories'];
-
-                        ////*****CREATE : `messages_categories` */
-                        $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                        $query = $db->prepare($sql);
-                        $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-                        $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
-                        $query->execute();
+                        header('Location: index.php');
                     }
-                    header('Location: index.php');
                 }
             }
         } else {
-            header('Location: index.php');
             $erreurs[] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
         }
     }
@@ -280,7 +284,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     $categorie = strip_tags($_POST['categories']);
 
                     //***CONDITION : content should be 30chars minimum
-                    //die(var_dump(strlen($contenu)));
                     if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
                         $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
                     }
@@ -373,7 +376,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 <body class="container">
     <!--* *************************************** TITLE -->
-    <h1>Le C.R.U.D. sur une page</h1>
+    <div class="d-flex flex-row justify-content-space-between">
+        <h1>Le C.R.U.D. sur une page</h1>
+    </div>
+
     <header class="row">
         <!-- -----------------WHO IS CONNECTED -------------------------->
         <?php
@@ -497,10 +503,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <!-- ----------------- ERRORS -->
                 <?php if (!empty($erreurs)) : ?>
                 <div class="alerts">
-                <ul>Attention  : 
-                    <?php foreach ($erreurs as $erreur) : ?>
-                    <li><?= $erreur ?></li>
-                    <?php endforeach; ?>
+                    <ul>Attention :
+                        <?php foreach ($erreurs as $erreur) : ?>
+                        <li><?= $erreur ?></li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
                 <?php endif; ?>
@@ -531,28 +537,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <!-- CATEGORIE  -->
                         <div class="align-self-center">
                             <label for="categories">Catégories</label>
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <select id="categories" name="categories" <?= $selected ?>>
+                            <select id="categories" name="categories">
                                 <option type="text" value="5">Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?= $selected ?>><?= $categorie['name'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
