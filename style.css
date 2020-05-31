@@ -6,7 +6,7 @@
     padding:0;
 }
 
-#alerts p{
+.alerts p{
     margin:0;
 }
 
@@ -22,6 +22,10 @@ body{
 
 header, main, .row, .col{
     background-color:#4C4C47;
+}
+
+.alerts ul{
+    margin:0;
 }
 
 .input_connect{
@@ -61,7 +65,7 @@ header, main, .row, .col{
     padding-left:20px;
 }
 
-#alerts{
+.alerts{
     color: #fff;
     background-color: #c82333;
     border-color: #bd2130;
@@ -72,5 +76,6 @@ header, main, .row, .col{
     justify-content:center;
     margin:auto;
     margin-top:10px;
+    margin-bottom:10px;
     padding:15px;
 }

@@ -1,7 +1,5 @@
 <!-- Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog -->
 
-
-
 <?php
 $title = '';
 $content = '';
@@ -11,12 +9,6 @@ $alertAdminRequired = '';
 $connected = '';
 $alertConnexion = '';
 $erreurs = [];
-
-//die(var_dump($_SESSION['errors']));
-
-
-
-
 
 //SESSION
 session_start();
@@ -270,7 +262,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         } else {
             header('Location: index.php');
             $erreurs[] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
-
         }
     }
     //************************************************************************************************************************************************************************************************** */
@@ -281,57 +272,58 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     //**************************** */
     if (isset($_POST['message'])) {
         //die(var_dump('entrée dans le form'));
-        if (verifForm($_SESSION, ['user'])) {      
-            if (isset($_POST) && !empty($_POST) && $_POST['categories'] != "5") {        
+        if (verifForm($_SESSION, ['user'])) {
+            if (isset($_POST) && !empty($_POST) && $_POST['categories'] != "5") {
                 if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
                     $titre = strip_tags($_POST['titre']);
                     $contenu = strip_tags($_POST['contenu'], '<div><p><h1><h2><img><strong>');
                     $categorie = strip_tags($_POST['categories']);
-                
-                //***CONDITION : content should be 30chars minimum
-                //die(var_dump(strlen($contenu)));
-                if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
-                    $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
-                }
-                
-                //***CONDITION : content should be 30chars minimum
-                if ((strlen($titre) < 3) || (strlen($contenu) > 30)) {
-                    $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
-                }
-                
 
-
-
-                //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
-                if (isset($_FILES) && !empty($_FILES)) {
-                    if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
-                        $image = $_FILES['image'];
-                        if ($image['error'] != 0) {
-                            $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
-                        }
-                        $types = ['image/png', 'image/jpeg'];
-                        if (!in_array($image['type'], $types)) {
-                            $erreurs[] = "le type de fichier doit être un jpeg ou png";
-                        }
-                        if ($image['size'] > 1048576) {
-                            $erreurs[] = "Le fichier est trop volumineux";
-                        }
-                        $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
-                        $image_name = md5(uniqid()) . '.' . $extension;
-                        $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
-                        if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
-                            echo "le fichier n'a pas été copié";
-                            die;
-                        } else {
-                            echo "Le fichier a été uploadé";
-                        }
-                        thumb(300, $image_name);
+                    //***CONDITION : content should be 30chars minimum
+                    //die(var_dump(strlen($contenu)));
+                    if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
+                        $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
                     }
-                }
 
-                
-                    
-                    if (isset($errors)) {
+                    //***CONDITION : content should be 30chars minimum
+                    if ((strlen($titre) < 3) || (strlen($titre) > 30)) {
+                        $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
+                    }
+
+
+
+
+                    //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
+                    if (isset($_FILES) && !empty($_FILES)) {
+                        if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
+                            $image = $_FILES['image'];
+                            if ($image['error'] != 0) {
+                                $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
+                            }
+                            $types = ['image/png', 'image/jpeg'];
+                            if (!in_array($image['type'], $types)) {
+                                $erreurs[] = "le type de fichier doit être un jpeg ou png";
+                            }
+                            if ($image['size'] > 1048576) {
+                                $erreurs[] = "Le fichier est trop volumineux";
+                            }
+                            $extension = pathinfo($image['name'], PATHINFO_EXTENSION);
+                            $image_name = md5(uniqid()) . '.' . $extension;
+                            $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
+                            if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
+                                echo "le fichier n'a pas été copié";
+                                die;
+                            } else {
+                                echo "Le fichier a été uploadé";
+                            }
+                            thumb(300, $image_name);
+                        } else {
+                            $erreurs[] = "Vous devez ajouter une image pour accompagner votre message";
+                        }
+                    }
+
+
+                    if ($erreurs == null) {
                         ////*****CREATE : `messages_categories` */
                         $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
                         $query = $db->prepare($sql); //Prepare method
@@ -352,7 +344,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                         header('Location: index.php');
                     };
-                }else {
+                } else {
                     $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message2";
                 }
             } else {
@@ -380,17 +372,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 </head>
 
 <body class="container">
+    <!--* *************************************** TITLE -->
     <h1>Le C.R.U.D. sur une page</h1>
     <header class="row">
-        <!-- ----------------- ERRORS -->
-
-
-        <?php if (!empty($erreurs)) : ?>
-        <?php foreach ($erreurs as $erreur) : ?>
-        <div> Attention vous avez un problème : <?= $erreur ?> </div>
-        <?php endforeach; ?>
-        <?php endif; ?>
-
+        <!-- -----------------WHO IS CONNECTED -------------------------->
         <?php
         if (isset($_SESSION)) : ?>
         <?php
@@ -398,12 +383,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <?php
                 $roles = json_decode($_SESSION['user']['roles']);
                 if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-        <div id="alerts">
+        <div class="alerts">
             <p><?= $_SESSION['user']['name'] ?> est connecté</p>
         </div>
         <?php endif ?>
         <?php else : ?>
-        <div id="alerts">
+        <div class="alerts">
             <p>Aucun utilisateur connecté</p>
         </div>
         <?php endif ?>
@@ -412,9 +397,29 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
         <div id="intro">
             <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
-            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>j'ai décidé de créer une page qui s'apparente à une livre d'or ou à une section de commentaire de base de page comme on peut en retrouver sur les sites d'e-commerce. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO).</p>
-            <p>Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message. Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
-            <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p>
+            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>voici une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur beaucoup de sites. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
+            <h3>Mode d'emploi : </h3>
+            <ul>
+                <li>
+                    À savoir avant de commencer :
+                    <ul>
+                        <li>
+                            Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence j'ai crée deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous pouvez trouver dans le tableau ci-dessous.
+                        </li>
+                        <li>
+                            Ajoutez une image au format carré pour accompagner votre message.
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    Pour écrire un message : connectez vous avec "utilisateur" ou "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à votre message avant de l'envoyer.
+                </li>
+                <li>
+                    Pour effacer ou modifier un message : connectez vous avec "administrateur" ("utilisateur n'a pas les droits nécessaires").
+                </li>
+            </ul>
+            <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
+            <!-- <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p> -->
             <div class="d-flex justify-content-center">
                 <table class="table tableau">
                     <thead>
@@ -465,19 +470,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     <input type="checkbox" name="remember" id="remember">
                     <label for="remember">Rester connecté(e)</label>
                 </div>
-
-
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-
+                <!-- CONNECT AND DISCONNECT BUTTONS -->
                 <?php
                 if (isset($_SESSION)) : ?>
                 <?php
@@ -490,21 +483,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <?php endif ?>
                 <button class="btn btn-primary" name="connect">Me connecter</button>
                 <?php endif ?>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-                <!----------------------------- REFAIRE LE BOUTON DE DÉCONNEXION ------------------------------>
-
-
-
-
-
             </form>
         </section>
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
@@ -516,6 +494,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         echo "Modifier votre message";
                     };
                     ?></h2>
+                <!-- ----------------- ERRORS -->
+                <?php if (!empty($erreurs)) : ?>
+                <div class="alerts">
+                <ul>Attention  : 
+                    <?php foreach ($erreurs as $erreur) : ?>
+                    <li><?= $erreur ?></li>
+                    <?php endforeach; ?>
+                    </ul>
+                </div>
+                <?php endif; ?>
                 <form method="post" enctype="multipart/form-data">
                     <div class="input-group input_msg">
                         <input class="form-control" type="text" id="titre" name="titre" placeholder="<?php if (!$message) {
@@ -560,11 +548,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
                             <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
                             <!-- RAJOUTER UNE CONDITION SUR LE SELECT -->
-                            <select id="categories" name="categories"<?= $selected ?>>
-                            <option type="text" value="5">Choisir une catégorie</option>
+                            <select id="categories" name="categories" <?= $selected ?>>
+                                <option type="text" value="5">Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                    <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
+                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"><?= $categorie['name'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
