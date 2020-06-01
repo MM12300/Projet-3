@@ -10,7 +10,6 @@ $connected = '';
 $alertConnexion = '';
 $erreurs = [];
 $selected = '';
-// $message_cat['messages_id'] = '' ;
 
 //SESSION
 session_start();
@@ -183,11 +182,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                 //die(var_dump($message_cat));
 
-                
+
                 if ($message_cat['messages_id'] == $message['id']) {
                     $selected = 'selected';
                     //die(var_dump($message_cat));
                 }
+
 
                 //***CONDITION : $_POST */
                 if (isset($_POST['message'])) {
@@ -205,6 +205,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             //***CONDITION : content should be 30chars minimum
                             if ((strlen($titre) < 3) || (strlen($titre) > 30)) {
                                 $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
+                            }
+
+                            if($_POST['categories'] = "5") {
+                                $erreurs[] = "Veuillez indiquer une catégorie à votre message";
                             }
 
                             //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
@@ -249,37 +253,36 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                     $query->bindValue(':user_id', 1, PDO::PARAM_INT);
                                     $query->bindValue(':image', $image_name, PDO::PARAM_STR);
                                     $query->execute();
-                                }      
+                                }
                             }
 
                             if ($erreurs == null) {
-                            //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
-                            $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
-                            $query = $db->prepare($sql);
-                            $query->bindValue(':title', $titre, PDO::PARAM_STR);
-                            $query->bindValue(':content', $contenu, PDO::PARAM_STR);
-                            $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                            $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                            $query->execute();
+                                //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
+                                $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                                $query = $db->prepare($sql);
+                                $query->bindValue(':title', $titre, PDO::PARAM_STR);
+                                $query->bindValue(':content', $contenu, PDO::PARAM_STR);
+                                $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                                $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                                $query->execute();
 
-                            ////*****DELETE : `messages_categories` (to replace by new entries) */
-                            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-                            $query = $db->prepare($sql);
-                            $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                            $query->execute();
-                            $category = $_POST['categories'];
+                                ////*****DELETE : `messages_categories` (to replace by new entries) */
+                                $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
+                                $query = $db->prepare($sql);
+                                $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                                $query->execute();
+                                $category = $_POST['categories'];
 
-                            ////*****CREATE : `messages_categories` */
-                            $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                            $query = $db->prepare($sql);
-                            $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-                            $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
-                            $query->execute();
+                                ////*****CREATE : `messages_categories` */
+                                $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
+                                $query = $db->prepare($sql);
+                                $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
+                                $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
+                                $query->execute();
 
-                            header('Location: index.php');
+                                header('Location: index.php');
                             }
                         }
-                        
                     }
                 }
             }
@@ -369,7 +372,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             } else {
                 $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
             }
-        }else{
+        } else {
             $erreurs[] = "Vous devez vous connecter pour ajouter un message";
         }
     }
@@ -383,6 +386,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 ***********************************************-->
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -395,6 +399,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 
 <!-- ************** BODY **************** -->
+
 <body class="container">
     <!--* *************************************** TITLE -->
     <div class="d-flex flex-row justify-content-space-between">
@@ -419,7 +424,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         </div>
         <?php endif ?>
         <?php endif ?>
-    <!--* *************************************** INTRODUCTION ************************************ -->    
+        <!--* *************************************** INTRODUCTION ************************************ -->
         <div id="intro">
             <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
             <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>voici une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur beaucoup de sites. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
@@ -557,12 +562,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <div class="align-self-center">
                             <label for="categories">Catégories</label>
                             <select id="categories" name="categories">
-                            <option type="text" id="5" value="5">Choisir une catégorie</option>
-                            <option type="text" id="2" value="2" >Amis</option>
-                            <option type="text" id="4" value="4" >Autres</option>
-                            <option type="text" id="3" value="3" >Collègues</option>
-                            <option type="text" id="1" value="1" >Choisir une catégorie</option>
-                            </select>
+                                <option type="text" value="5">Choisir une catégorie</option>
+                                <!-- Creating a list of categories  -->
+                                <?php foreach ($categories as $categorie) : ?>
+                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"  <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message_cat['categories_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?> <?php endif ?>><?= $categorie['name'] ?></option>
+                                <?php endforeach; ?>                            </select>
                         </div>
                         <!-- BOUTONS -->
                         <div>
