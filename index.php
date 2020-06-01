@@ -10,6 +10,7 @@ $connected = '';
 $alertConnexion = '';
 $erreurs = [];
 $selected = '';
+// $message_cat['messages_id'] = '' ;
 
 //SESSION
 session_start();
@@ -95,6 +96,7 @@ ORDER BY `created_at` DESC;';
 $query = $db->query($sql);
 $messages = $query->fetchAll(PDO::FETCH_ASSOC);
 
+
 //************************************************************************************************************************************************************************************************** */
 
 //***CONDITION : DELETE CLICKED? */
@@ -107,7 +109,6 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         $roles = json_decode($_SESSION['user']['roles']);
         if (!in_array('ROLE_ADMIN', $roles)) {
             $erreurs[] = "Vous ne pouvez pas effectuer cette action car vous n'êtes pas administrateur";
-            header('Location: index.php');
         } else {
             //****READ - Checking if the messages exists
             $id = strip_tags($_GET['delete']);
@@ -173,7 +174,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 $title = $message['title'];
                 $content = $message['content'];
 
-
                 //*****READ - If message exists we want to know its category
                 $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
                 $query = $db->prepare($sql);
@@ -181,18 +181,31 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 $query->execute();
                 $message_cat = $query->fetch(PDO::FETCH_ASSOC);
 
+                //die(var_dump($message_cat));
+
                 
                 if ($message_cat['messages_id'] == $message['id']) {
                     $selected = 'selected';
+                    //die(var_dump($message_cat));
                 }
 
                 //***CONDITION : $_POST */
                 if (isset($_POST['message'])) {
                     if (isset($_POST) && !empty($_POST)) {
                         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
-                            $title = strip_tags($_POST['titre']);
-                            $content = strip_tags($_POST['contenu']);
+                            $titre = strip_tags($_POST['titre']);
+                            $contenu = strip_tags($_POST['contenu']);
                             $id = strip_tags($_GET['edit']);
+
+                            //***CONDITION : content should be 30chars minimum
+                            if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
+                                $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
+                            }
+
+                            //***CONDITION : content should be 30chars minimum
+                            if ((strlen($titre) < 3) || (strlen($titre) > 30)) {
+                                $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
+                            }
 
                             //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                             if (isset($_FILES) && !empty($_FILES)) {
@@ -236,16 +249,19 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                     $query->bindValue(':user_id', 1, PDO::PARAM_INT);
                                     $query->bindValue(':image', $image_name, PDO::PARAM_STR);
                                     $query->execute();
-                                }
-                                //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
-                                $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
-                                $query = $db->prepare($sql);
-                                $query->bindValue(':title', $title, PDO::PARAM_STR);
-                                $query->bindValue(':content', $content, PDO::PARAM_STR);
-                                $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                                $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                                $query->execute();
+                                }      
                             }
+
+                            if ($erreurs == null) {
+                            //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
+                            $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                            $query = $db->prepare($sql);
+                            $query->bindValue(':title', $titre, PDO::PARAM_STR);
+                            $query->bindValue(':content', $contenu, PDO::PARAM_STR);
+                            $query->bindvalue(':id', $id, PDO::PARAM_INT);
+                            $query->bindValue(':user_id', 1, PDO::PARAM_INT);
+                            $query->execute();
+
                             ////*****DELETE : `messages_categories` (to replace by new entries) */
                             $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
                             $query = $db->prepare($sql);
@@ -259,8 +275,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
                             $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
                             $query->execute();
+
+                            header('Location: index.php');
+                            }
                         }
-                        header('Location: index.php');
+                        
                     }
                 }
             }
@@ -292,9 +311,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     if ((strlen($titre) < 3) || (strlen($titre) > 30)) {
                         $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
                     }
-
-
-
 
                     //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                     if (isset($_FILES) && !empty($_FILES)) {
@@ -342,7 +358,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
                         $query = $db->prepare($sql); //Prepare method
                         $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
-                        $query->bindValue(':idcategorie', $categories, PDO::PARAM_INT);
+                        $query->bindValue(':idcategorie', $categorie, PDO::PARAM_INT);
                         $query->execute();
 
                         header('Location: index.php');
@@ -353,6 +369,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             } else {
                 $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
             }
+        }else{
+            $erreurs[] = "Vous devez vous connecter pour ajouter un message";
         }
     }
 }
@@ -360,10 +378,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 //************************************************************************************************************************************************************************************************** */
 ?>
 
-
+<!--******************************************
+ *******************  HTML ***************************
+***********************************************-->
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -374,12 +393,13 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <title>C.R.U.D. One-Page</title>
 </head>
 
+
+<!-- ************** BODY **************** -->
 <body class="container">
     <!--* *************************************** TITLE -->
     <div class="d-flex flex-row justify-content-space-between">
         <h1>Le C.R.U.D. sur une page</h1>
     </div>
-
     <header class="row">
         <!-- -----------------WHO IS CONNECTED -------------------------->
         <?php
@@ -398,9 +418,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
             <p>Aucun utilisateur connecté</p>
         </div>
         <?php endif ?>
-
         <?php endif ?>
-
+    <!--* *************************************** INTRODUCTION ************************************ -->    
         <div id="intro">
             <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
             <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>voici une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur beaucoup de sites. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
@@ -538,11 +557,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         <div class="align-self-center">
                             <label for="categories">Catégories</label>
                             <select id="categories" name="categories">
-                                <option type="text" value="5">Choisir une catégorie</option>
-                                <!-- Creating a list of categories  -->
-                                <?php foreach ($categories as $categorie) : ?>
-                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?= $selected ?>><?= $categorie['name'] ?></option>
-                                <?php endforeach; ?>
+                            <option type="text" id="5" value="5">Choisir une catégorie</option>
+                            <option type="text" id="2" value="2" >Amis</option>
+                            <option type="text" id="4" value="4" >Autres</option>
+                            <option type="text" id="3" value="3" >Collègues</option>
+                            <option type="text" id="1" value="1" >Choisir une catégorie</option>
                             </select>
                         </div>
                         <!-- BOUTONS -->
