@@ -169,7 +169,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 //header('Location: index.php');
                 $erreurs[] =  "le message que vous voulez modifier n'existe pas";
             } else {
-
+                
                 $title = $message['title'];
                 $content = $message['content'];
 
@@ -191,12 +191,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                 //***CONDITION : $_POST */
                 if (isset($_POST['message'])) {
+                    
                     if (isset($_POST) && !empty($_POST)) {
+                        
                         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
                             $titre = strip_tags($_POST['titre']);
                             $contenu = strip_tags($_POST['contenu']);
                             $id = strip_tags($_GET['edit']);
-
+                            $categorie = strip_tags($_POST['categories']);
+                            var_dump($_POST['categories']);
+                            var_dump($categorie);
                             //***CONDITION : content should be 30chars minimum
                             if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
                                 $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
@@ -207,9 +211,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
                             }
 
-                            if($_POST['categories'] = "5") {
-                                $erreurs[] = "Veuillez indiquer une catégorie à votre message";
+                            if($categorie == "5") {
+                                $erreurs[] = "Veuillez indiquer une catégorie à votre message 666";
                             }
+
+                            
 
                             //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                             if (isset($_FILES) && !empty($_FILES)) {
@@ -277,7 +283,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
                                 $query = $db->prepare($sql);
                                 $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-                                $query->bindValue(':idcategorie', strip_tags($category), PDO::PARAM_INT);
+                                $query->bindValue(':idcategorie', strip_tags($categorie), PDO::PARAM_INT);
                                 $query->execute();
 
                                 header('Location: index.php');
@@ -482,6 +488,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div>
+            <p> Retrouvez l'évolution de ce projet sur github ou retournez sur mon site CV. 
+        </p>
         </div>
     </header>
     <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
