@@ -1,17 +1,8 @@
 <?php
-//*********************** */
-//Fichier pour se connecter à une BDD (ici bdd_blog)
-//*********************** */
-
-//$db === Base de Données (BDD)
-//hôte : local
-//nom de la base de données : bdd (exemple)
-//login : root - mot de passe : '' (vide)
-
-
+require_once('inc/brouette.php');
 try {
     //Connexion à la base de données
-    $db = new PDO('mysql:host=wisconsin.o2switch.net;dbname=mama5881_cv', 'mama5881', 'KYfF-3vCV2ky');
+    $db = new PDO('mysql:host='. $Aa . ';dbname=' . $Bb . ',' . $Cc . ',' . $Dd);
 
     //On force les échanges en UTF8
     $db->exec('SET NAMES "UTF8"');
