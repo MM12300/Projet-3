@@ -1,33 +1,60 @@
-/* FRAMES FOR LAYOUT */
-#display-mess, #add-mess{
-    /* border:red 1px solid; */
-    width:100%;
-    margin:0;
-    padding:0;
+/* MAIN TAGS*/
+h1{
+margin: 10px 10px 10px 50px;
 }
-
-.alerts p{
-    margin:0;
-}
-
-
 img{
     width:250px;
 }
-
 body{
     background-color: #2D2D2A;
     color : #fff;
 }
-
 header, main, .row, .col{
     background-color:#4C4C47;
 }
 
-.alerts ul{
-    margin:0;
+
+/* * ANIMATION */
+
+#vortex {
+    animation: rotation 2s infinite linear;
+}
+@keyframes rotation {
+    from {
+            -webkit-transform: rotate(0deg);
+    }
+    to {
+            -webkit-transform: rotate(359deg);
+    }
 }
 
+/* *****PADDING/MARGINS*****  */
+#add-mess, #connect, #intro{
+    padding:20px;
+}
+#titre, #contenu{
+    margin-bottom:10px;
+}
+.date{
+    padding-left:20px;
+}
+.sectionmsg{
+    margin-bottom:20px;
+}
+
+
+/****** FONT-SIZES ******/
+.msg-content{
+    font-size:1.5rem;
+}
+.msg-title h2{
+    font-size:2.5rem;
+}
+
+.intro_span{
+    font-weight:bold;
+}
+/* RANDOM CLASSES */
 .input_connect{
     width:200px;
 }
@@ -36,36 +63,21 @@ header, main, .row, .col{
     width:80%;
 }
 
+.logo{
+    width: 80px;
+}
+
+/* CLASS .TABLE */
 .table{
     text-align:left;
     width: 90%;
     color:white;
     margin:0;
 }
-/* *****PADDING/MARGINS*****  */
-#add-mess, #connect, #intro{
-    padding:20px;
-}
-#titre, #contenu{
-    margin-bottom:10px;
-}
-.msg-content{
-    font-size:1.5rem;
-}
-.msg-title h2{
-    font-size:2.5rem;
-}
-.date{
-    padding-left:20px;
-}
-.sectionmsg{
-    margin-bottom:20px;
-}
-#vosmessages{
-    padding-left:20px;
-}
 
-.alerts{
+
+/****** CLASS .ERREURS ******/
+.erreurs{
     color: #fff;
     background-color: #c82333;
     border-color: #bd2130;
@@ -78,4 +90,58 @@ header, main, .row, .col{
     margin-top:10px;
     margin-bottom:10px;
     padding:15px;
+}
+
+/****** CLASS .ALERTS ******/
+.alerts{
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    border-radius:0.25rem;
+    text-align : center;
+    display : flex;
+    flex-direction:row;
+    justify-content:center;
+    margin:auto;
+    margin-top:10px;
+    margin-bottom:10px;
+    padding:15px;
+}
+.alerts p{
+    margin:0;
+}
+.alerts ul{
+    margin:0;
+}
+/* IDs */
+
+#display-mess, #add-mess{
+    /* border:red 1px solid; */
+    width:100%;
+    margin:0;
+}
+
+#vosmessages{
+    padding-left:20px;
+}
+
+#intro div:last-of-type {
+    margin: 10px 0px;
+}
+#intro div:last-of-type > p{
+    margin:0;
+    align-self:center;
+}
+
+
+#connect{
+    border-top : solid 1px white;
+    border-bottom : solid 1px white;
+}
+#add-mess{
+    border-bottom: solid 1px white;
+}
+
+#display-mess{
+    margin-top : 10px;
 }

@@ -169,7 +169,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 //header('Location: index.php');
                 $erreurs[] =  "le message que vous voulez modifier n'existe pas";
             } else {
-                
+
                 $title = $message['title'];
                 $content = $message['content'];
 
@@ -191,9 +191,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                 //***CONDITION : $_POST */
                 if (isset($_POST['message'])) {
-                    
+
                     if (isset($_POST) && !empty($_POST)) {
-                        
+
                         if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
                             $titre = strip_tags($_POST['titre']);
                             $contenu = strip_tags($_POST['contenu']);
@@ -211,11 +211,11 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 $erreurs[] = "Le titre doit contenir entre 3 et 30 caractères";
                             }
 
-                            if($categorie == "5") {
+                            if ($categorie == "5") {
                                 $erreurs[] = "Veuillez indiquer une catégorie à votre message 666";
                             }
 
-                            
+
 
                             //***CONDITION : $_FILES */ IMAGES HANDELING - JPEG AND PNG ONLY
                             if (isset($_FILES) && !empty($_FILES)) {
@@ -408,11 +408,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
 <body class="container">
     <!--* *************************************** TITLE -->
-    <div class="d-flex flex-row justify-content-space-between">
+    <div class="d-flex flex-row justify-content-between">
         <h1>Le C.R.U.D. sur une page</h1>
-    </div>
-    <header class="row">
-        <!-- -----------------WHO IS CONNECTED -------------------------->
         <?php
         if (isset($_SESSION)) : ?>
         <?php
@@ -430,14 +427,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         </div>
         <?php endif ?>
         <?php endif ?>
+    </div>
+    <header class="row">
+        <!-- -----------------WHO IS CONNECTED -------------------------->
+
         <!--* *************************************** INTRODUCTION ************************************ -->
         <div id="intro">
-            <h2>Introduction à la gestion de base de données MySQL et au langage PHP (procédural uniquement).</h2>
-            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>voici une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur beaucoup de sites. L'ensemble des fonctionnalités du CRUD sont présentes sur une seule page. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
+            <h2>Introduction à la gestion de base de données MySQL et au langage PHP</h2>
+            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a> voici une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur beaucoup de sites. L'ensemble du CRUD est codé en PHP sur <span class="intro_span">une seule page</span>. Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
             <h3>Mode d'emploi : </h3>
             <ul>
                 <li>
-                    À savoir avant de commencer :
+                    <span class="intro_span">À savoir</span> avant de commencer :
                     <ul>
                         <li>
                             Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence j'ai crée deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous pouvez trouver dans le tableau ci-dessous.
@@ -448,10 +449,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     </ul>
                 </li>
                 <li>
-                    Pour écrire un message : connectez vous avec "utilisateur" ou "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à votre message avant de l'envoyer.
+                    <span class="intro_span">Pour écrire un message :</span> connectez vous avec "utilisateur" ou "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à votre message avant de l'envoyer.
                 </li>
                 <li>
-                    Pour effacer ou modifier un message : connectez vous avec "administrateur" ("utilisateur n'a pas les droits nécessaires").
+                    <span class="intro_span">Pour effacer ou modifier un message :</span> connectez vous avec "administrateur" ("utilisateur n'a pas les droits nécessaires").
                 </li>
             </ul>
             <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
@@ -488,11 +489,12 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     </tbody>
                 </table>
             </div>
+            <div class ="d-flex flex-row justify-content-between">
+            <a  href="https://github.com/MM12300/Projet-3"><img class="logo" src="images/gitpng.png" alt="git"></a>
+            <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png" alt="mon site cv"></a>
+            <p class="align-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le vortex pour retourner sur mon site-CV</p>        
         </div>
-        <div>
-            <p> Retrouvez l'évolution de ce projet sur github ou retournez sur mon site CV. 
-        </p>
-        </div>
+        </div> 
     </header>
     <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
     <!-- CONNECT FORM********************************************************* -->
@@ -575,8 +577,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 <option type="text" value="5">Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>"  <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message_cat['categories_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?> <?php endif ?>><?= $categorie['name'] ?></option>
-                                <?php endforeach; ?>                            </select>
+                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message_cat['categories_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?> <?php endif ?>><?= $categorie['name'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <!-- BOUTONS -->
                         <div>
