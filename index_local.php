@@ -1,9 +1,6 @@
 <!-- Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog -->
 
 <?php
-session_start();
-
-
 $title = '';
 $content = '';
 $message = null;
@@ -15,7 +12,7 @@ $erreurs = [];
 $selected = '';
 
 //SESSION
-var_dump($_SESSION);
+session_start();
 //DB OPEN
 require_once('inc/connect.php');
 //functions library loading
@@ -382,7 +379,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
             }
         } else {
-            var_dump($_SESSION);
             $erreurs[] = "Vous devez vous connecter pour ajouter un message";
         }
     }
