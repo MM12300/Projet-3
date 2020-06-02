@@ -1,7 +1,10 @@
-<!-- Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog -->
-
 <?php
+//Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog
 session_start();
+// var_dump(session_status());
+// die;
+// $_SESSION['brouette'] = 'toto';
+//var_dump($_SESSION);
 
 
 $title = '';
@@ -15,7 +18,7 @@ $erreurs = [];
 $selected = '';
 
 //SESSION
-var_dump($_SESSION);
+
 //DB OPEN
 require_once('inc/connect.php');
 //functions library loading
@@ -249,8 +252,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                     $nomImageComplet = __DIR__  . '/uploads/' . $image_name;
                                     if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
                                         $erreurs[] = "le fichier n'a pas été copié";
-                                    } else {
-                                        $erreurs[] = "Le fichier a été uploadé";
                                     }
                                     thumb(100, $image_name);
                                     //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
@@ -344,8 +345,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
                                 echo "le fichier n'a pas été copié";
                                 die;
-                            } else {
-                                echo "Le fichier a été uploadé";
                             }
                             thumb(300, $image_name);
                         } else {
@@ -518,8 +517,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 </div>
                 <!-- CONNECT AND DISCONNECT BUTTONS -->
                 <?php
-                if (isset($_SESSION)) : ?>
-                <?php
                     if (verifForm($_SESSION, ['user'])) : ?>
                 <?php
                         $roles = json_decode($_SESSION['user']['roles']);
@@ -528,7 +525,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <?php endif ?>
                 <?php endif ?>
                 <button class="btn btn-primary" name="connect">Me connecter</button>
-                <?php endif ?>
             </form>
         </section>
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
