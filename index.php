@@ -1,10 +1,9 @@
 <?php
 //Toute information relative à ce projet (commentaires du code) trouvable dans le projet blog
 session_start();
-// var_dump(session_status());
-// die;
+
 // $_SESSION['brouette'] = 'toto';
-//var_dump($_SESSION);
+
 
 
 $title = '';
@@ -186,14 +185,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 $query->execute();
                 $message_cat = $query->fetch(PDO::FETCH_ASSOC);
 
-                //die(var_dump($message_cat));
-
-
                 if ($message_cat['messages_id'] == $message['id']) {
                     $selected = 'selected';
-                    //die(var_dump($message_cat));
                 }
-
 
                 //***CONDITION : $_POST */
                 if (isset($_POST['message'])) {
@@ -205,8 +199,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $contenu = strip_tags($_POST['contenu']);
                             $id = strip_tags($_GET['edit']);
                             $categorie = strip_tags($_POST['categories']);
-                            var_dump($_POST['categories']);
-                            var_dump($categorie);
                             //***CONDITION : content should be 30chars minimum
                             if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
                                 $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
@@ -227,15 +219,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             if (isset($_FILES) && !empty($_FILES)) {
                                 if (isset($_FILES['image']) && !empty($_FILES['image']) && $_FILES['image']['error'] != 4) {
                                     //DELETING OLD IMAGES
-                                    if ($message['featured_image'] != null) {
-                                        $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                                        $fichiers = scandir(__DIR__ . '/uploads/');
-                                        foreach ($fichiers as $fichier) {
-                                            if (strpos($fichier, $debutNom) === 0) {
-                                                unlink(__DIR__ . '/uploads/' . $fichier);
-                                            }
-                                        }
-                                    }
+                                    
                                     $image = $_FILES['image'];
                                     if ($image['error'] != 0) {
                                         $erreurs[] = "Une erreur s'\est produite lors du chargement de votre fichier";
@@ -253,7 +237,18 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                     if (!move_uploaded_file($image['tmp_name'], $nomImageComplet)) {
                                         $erreurs[] = "le fichier n'a pas été copié";
                                     }
-                                    thumb(100, $image_name);
+                                    thumb(300, $image_name);
+
+                                    if ($message['featured_image'] != null) {
+                                        $debutNom = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                                        $fichiers = scandir(__DIR__ . '/uploads/');
+                                        foreach ($fichiers as $fichier) {
+                                            if (strpos($fichier, $debutNom) === 0) {
+                                                unlink(__DIR__ . '/uploads/' . $fichier);
+                                            }
+                                        }
+                                    }
+
                                     //*****UPDATE : `messages` */ IF NEW FEATURED IMAGE
                                     $sql = 'UPDATE `messages` SET `title` = :title, `featured_image` = :image, `content` = :content, `users_id` = :user_id WHERE `id`=:id;';
                                     $query = $db->prepare($sql);
@@ -307,7 +302,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     //** CREATING ONE MESSAGE */ */
     //**************************** */
     if (isset($_POST['message'])) {
-        //die(var_dump('entrée dans le form'));
         if (verifForm($_SESSION, ['user'])) {
             if (isset($_POST) && !empty($_POST) && $_POST['categories'] != "5") {
                 if (verifForm($_POST, ['titre', 'contenu', 'categories'])) {
@@ -381,7 +375,6 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
             }
         } else {
-            var_dump($_SESSION);
             $erreurs[] = "Vous devez vous connecter pour ajouter un message";
         }
     }
