@@ -16,6 +16,8 @@ $alertConnexion = '';
 $erreurs = [];
 $selected = '';
 
+
+
 //SESSION
 
 //DB OPEN
@@ -92,10 +94,8 @@ $categories = $query->fetchALl(PDO::FETCH_ASSOC);
 $sql = 'SELECT `messages`.*,
 GROUP_CONCAT(`categories`.`name`) as categorie_name
 FROM `messages`
-LEFT JOIN `messages_categories`
-ON `messages`.`id` = `messages_categories`.`messages_id`
 LEFT JOIN `categories`
-ON `messages_categories`.`categories_id` = `categories`.`id`
+ON `messages`.`categorie_id` = `categories`.`id`
 GROUP BY `messages`.`id`
 ORDER BY `created_at` DESC;';
 $query = $db->query($sql);
@@ -125,13 +125,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
             if (!$message) {
                 $erreurs[] = "le message que vous voulez supprimer n'existe pas";
             }
-            //***** DELETE - from `messages_categories`*/
-            $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-            $query = $db->prepare($sql);
-            $query->bindValue(':id', $id, PDO::PARAM_INT);
-            $query->execute();
 
-            //***** DELETE - from `messages_categories`*/
+            //***** DELETE - from `messages`*/
             $sql = 'DELETE FROM `messages` WHERE `id` = :id;';
             $query = $db->prepare($sql);
             $query->bindValue(':id', $id, PDO::PARAM_INT);
@@ -175,19 +170,14 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 //header('Location: index.php');
                 $erreurs[] =  "le message que vous voulez modifier n'existe pas";
             } else {
-
                 $title = $message['title'];
                 $content = $message['content'];
+                $message_categorie = $message['categorie_id'];
 
-                //*****READ - If message exists we want to know its category
-                $sql = 'SELECT * FROM `messages_categories` WHERE `messages_id` = :id;';
-                $query = $db->prepare($sql);
-                $query->bindValue(':id', $id, PDO::PARAM_INT);
-                $query->execute();
-                $message_cat = $query->fetch(PDO::FETCH_ASSOC);
-
-                if ($message_cat['messages_id'] == $message['id']) {
-                    $selected = 'selected';
+                foreach ($categories as $category) {
+                    if ($message_categorie == $category['id']) {
+                        $selected = 'selected';
+                    }
                 }
 
                 //***CONDITION : $_POST */
@@ -264,26 +254,13 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                             if ($erreurs == null) {
                                 //*****UPDATE : `messages` */ IF NO NEW FEATURED IMAGE
-                                $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id WHERE `id`=:id;';
+                                $sql = 'UPDATE `messages` SET `title` = :title,`content` = :content, `users_id` = :user_id, `categorie_id` = :categorie_id WHERE `id`=:id;';
                                 $query = $db->prepare($sql);
                                 $query->bindValue(':title', $titre, PDO::PARAM_STR);
                                 $query->bindValue(':content', $contenu, PDO::PARAM_STR);
                                 $query->bindvalue(':id', $id, PDO::PARAM_INT);
                                 $query->bindValue(':user_id', 1, PDO::PARAM_INT);
-                                $query->execute();
-
-                                ////*****DELETE : `messages_categories` (to replace by new entries) */
-                                $sql = 'DELETE FROM `messages_categories` WHERE `messages_id` = :id;';
-                                $query = $db->prepare($sql);
-                                $query->bindvalue(':id', $id, PDO::PARAM_INT);
-                                $query->execute();
-                                $category = $_POST['categories'];
-
-                                ////*****CREATE : `messages_categories` */
-                                $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                                $query = $db->prepare($sql);
-                                $query->bindValue(':idmessage', $id, PDO::PARAM_INT);
-                                $query->bindValue(':idcategorie', strip_tags($categorie), PDO::PARAM_INT);
+                                $query->bindValue(':categorie_id', strip_tags($categorie), PDO::PARAM_INT);
                                 $query->execute();
 
                                 header('Location: index.php');
@@ -350,22 +327,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 
                     if ($erreurs == null) {
                         ////*****CREATE : `messages_categories` */
-                        $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`) VALUES (:titre, :contenu, :image, :user_id);';
+                        $sql = 'INSERT INTO `messages` (`title`,`content`, `featured_image`, `users_id`, `categorie_id`) VALUES (:titre, :contenu, :image, :user_id, :categorie_id);';
                         $query = $db->prepare($sql); //Prepare method
                         $query->bindValue(':titre', $titre, PDO::PARAM_STR);
                         $query->bindValue(':contenu', $contenu, PDO::PARAM_STR);
                         $query->bindValue(':image', $image_name, PDO::PARAM_STR);
                         $query->bindValue('user_id', 1, PDO::PARAM_INT); //USER DEFINED TO ONE BECAUSE NO $_SESSION AT THE MOMENT
+                        $query->bindValue('categorie_id', $categorie, PDO::PARAM_INT);
                         $query->execute();
                         //collecting the message_id for the next step
                         $idMessage = $db->lastInsertId();
-
-                        //***** CREATE - `messages_categories`
-                        $sql = 'INSERT INTO `messages_categories`(`messages_id`, `categories_id`) VALUES (:idmessage, :idcategorie);';
-                        $query = $db->prepare($sql); //Prepare method
-                        $query->bindValue(':idmessage', $idMessage, PDO::PARAM_INT);
-                        $query->bindValue(':idcategorie', $categorie, PDO::PARAM_INT);
-                        $query->execute();
 
                         header('Location: index.php');
                     };
@@ -571,7 +542,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                 <option type="text" value="5">Choisir une catégorie</option>
                                 <!-- Creating a list of categories  -->
                                 <?php foreach ($categories as $categorie) : ?>
-                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message_cat['categories_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?> <?php endif ?>><?= $categorie['name'] ?></option>
+                                <option type="text" id="<?= $categorie['id'] ?>" value="<?= $categorie['id'] ?>" <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message['categorie_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?> <?php endif ?>><?= $categorie['name'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
