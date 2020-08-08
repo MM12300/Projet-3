@@ -3,3 +3,6 @@ index_local.php
 utilisateurs.txt
 .idea
 
+/inc/connect.php
+/inc/connect_online.php
+/inc/close.php

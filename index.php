@@ -370,10 +370,10 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         header('Location: index.php');
                     };
                 } else {
-                    $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message2";
+                    $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message";
                 }
             } else {
-                $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message1";
+                $erreurs[] = "Attention il faut indiquer un titre, des catégories et un contenu pour écrire un message";
             }
         } else {
             $erreurs[] = "Vous devez vous connecter pour ajouter un message";
