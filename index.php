@@ -367,6 +367,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
           integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Josefin+Sans"/>
     <title>C.R.U.D. One-Page</title>
 </head>
 
@@ -374,274 +375,284 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 <!-- ************** BODY **************** -->
 
 <body class="container">
-<!--* *************************************** TITLE -->
-<div class="d-flex flex-row justify-content-between">
-    <h1>Projet 3 - Le C.R.U.D. one-page</h1>
-    <?php
-    if (isset($_SESSION)) : ?>
+<div id="middle">
+    <!--* *************************************** TITLE -->
+    <div class="row d-flex flex-row justify-content-between w-100" id="title">
+        <h1>Projet 3 - Le C.R.U.D. one-page</h1>
+        <?php
+        if (isset($_SESSION)) : ?>
+            <?php
+            if (verifForm($_SESSION, ['user'])) : ?>
+                <?php
+                $roles = json_decode($_SESSION['user']['roles']);
+                if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
+                    <div class="alerts">
+                        <p><?= $_SESSION['user']['name'] ?> est connecté</p>
+                    </div>
+                <?php endif ?>
+            <?php else : ?>
+                <div class="alerts">
+                    <p>Aucun utilisateur connecté</p>
+                </div>
+            <?php endif ?>
+        <?php endif ?>
         <?php
         if (verifForm($_SESSION, ['user'])) : ?>
             <?php
             $roles = json_decode($_SESSION['user']['roles']);
             if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-                <div class="alerts">
-                    <p><?= $_SESSION['user']['name'] ?> est connecté</p>
-                </div>
-            <?php endif ?>
-        <?php else : ?>
-            <div class="alerts">
-                <p>Aucun utilisateur connecté</p>
-            </div>
-        <?php endif ?>
-    <?php endif ?>
-    <?php
-    if (verifForm($_SESSION, ['user'])) : ?>
-        <?php
-        $roles = json_decode($_SESSION['user']['roles']);
-        if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-            <form method="post">
-                <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
-            </form>
-
-        <?php endif ?>
-    <?php endif ?>
-</div>
-<header class="row">
-    <!-- -----------------WHO IS CONNECTED -------------------------->
-    <?php if (empty($_SESSION)) : ?>
-    <section class="col-12 d-flex flex-column" id="connect">
-        <h2>Formulaire de connexion</h2>
-        <form class="d-flex flex-row justify-content-between" method="post">
-            <div class="input-group input_connect">
-                <input class="form-control" type="email" id="mail" name="mail" placeholder="E-mail">
-            </div>
-            <div class="input-group input_connect">
-                <input class="form-control" type="password" id="motdepasse" name="motdepasse"
-                       placeholder="Mot de passe">
-            </div>
-            <button class="btn btn-primary" name="connect">Me connecter</button>
-            <div class="align-self-center">
-                <input type="checkbox" name="remember" id="remember">
-                <label for="remember">Rester connecté(e)</label>
-            </div>
+                <form method="post">
+                    <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
+                </form>
 
             <?php endif ?>
-
-
-        </form>
-    </section>
-    <!--* *************************************** INTRODUCTION ************************************ -->
-
-</header>
-<!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
-<!-- CONNECT FORM********************************************************* -->
-<main class="row">
-    <div id="intro">
-        <h2>Introduction à la gestion de base de données MySQL et au langage PHP</h2>
-        <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a> voici
-            une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur
-            beaucoup de sites. L'ensemble du CRUD est codé en PHP sur <span class="intro_span">une seule page</span>.
-            Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page
-            classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
-        <h3>Mode d'emploi : </h3>
-        <ul>
-            <li>
-                <span class="intro_span">À savoir</span> avant de commencer :
-                <ul>
-                    <li>
-                        Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence j'ai crée
-                        deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous pouvez
-                        trouver dans le tableau ci-dessous.
-                    </li>
-                    <li>
-                        Ajoutez une image au format carré pour accompagner votre message.
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <span class="intro_span">Pour écrire un message :</span> connectez vous avec "utilisateur" ou
-                "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à votre
-                message avant de l'envoyer.
-            </li>
-            <li>
-                <span class="intro_span">Pour effacer ou modifier un message :</span> connectez vous avec
-                "administrateur" ("utilisateur n'a pas les droits nécessaires").
-            </li>
-        </ul>
-        <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
-        <!-- <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p> -->
-        <div class="d-flex justify-content-center">
-            <table class="table tableau">
-                <thead>
-                <tr>
-                    <th scope="col">Type d'utilisateur</th>
-                    <th scope="col">E-mail</th>
-                    <th scope="col">Mot de passe</th>
-                    <th scope="col">Fonctionnalité</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>Non-connecté</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>Ne peut pas poster de message</td>
-                </tr>
-                <tr>
-                    <td>Utilisateur classique</td>
-                    <td>user@gmail.com</td>
-                    <td>654321</td>
-                    <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
-                </tr>
-                <tr>
-                    <td>Administrateur</td>
-                    <td>admin@gmail.com</td>
-                    <td>123456</td>
-                    <td>Peut ajouter/modifier/supprimer un message</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex flex-row justify-content-between">
-            <a href="https://github.com/MM12300/Projet-3"><img class="logo" src="images/gitpng.png" alt="git"></a>
-            <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png"
-                                                    alt="mon site cv"></a>
-            <p class="align-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le vortex
-                pour retourner sur mon site-CV</p>
-        </div>
+        <?php endif ?>
     </div>
-    <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
-    <section class="col-12" id="add-mess">
-        <div>
-            <h2><?php if (!$message) {
-                    echo "Ajouter un message";
-                } else {
-                    echo "Modifier votre message";
-                };
-                ?></h2>
-            <!-- ----------------- ERRORS -->
-            <?php if (!empty($erreurs)) : ?>
-                <div class="erreurs">
-                    <ul>Attention :
-                        <?php foreach ($erreurs as $erreur) : ?>
-                            <li><?= $erreur ?></li>
-                        <?php endforeach; ?>
+    <header class="row">
+        <!-- -----------------WHO IS CONNECTED -------------------------->
+        <?php if (empty($_SESSION)) : ?>
+        <section class="col-12 d-flex flex-column" id="connect">
+            <h2>Connexion</h2>
+            <form class="d-flex flex-row justify-content-between" method="post">
+                <div class="input-group input_connect">
+                    <input class="form-control" type="email" id="mail" name="mail" placeholder="E-mail">
+                </div>
+                <div class="input-group input_connect">
+                    <input class="form-control" type="password" id="motdepasse" name="motdepasse"
+                           placeholder="Mot de passe">
+                </div>
+                <button class="btn btn-primary flashy_button" name="connect">Me connecter</button>
+                <div class="align-self-center">
+                    <input type="checkbox" name="remember" id="remember">
+                    <label for="remember">Rester connecté(e)</label>
+                </div>
+
+                <?php endif ?>
+
+
+            </form>
+        </section>
+        <!--* *************************************** INTRODUCTION ************************************ -->
+
+    </header>
+    <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
+    <!-- CONNECT FORM********************************************************* -->
+    <main class="row">
+        <div id="intro">
+            <h2>INTRODUCTION - Le C.R.U.D avec MySQL et PHP</h2>
+            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>
+                voici
+                une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur
+                les sites d'e-commerce ou d'informations. L'ensemble du CRUD est réalisé en PHP sur <span
+                        class="intro_span">une seule page/one-page</span>.
+                Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page
+                classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
+            <h3>Mode d'emploi : </h3>
+            <ul>
+                <li>
+                    <span class="intro_span">À savoir avant de commencer </span>:
+                    <ul>
+                        <li>
+                            Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence j'ai
+                            crée
+                            deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous
+                            pouvez
+                            trouver dans le tableau ci-dessous.
+                        </li>
+                        <li>
+                            Ajoutez une image au format carré pour accompagner votre message.
+                        </li>
                     </ul>
-                </div>
-            <?php endif; ?>
-            <form method="post" enctype="multipart/form-data">
-                <div class="input-group input_msg">
-                    <input class="form-control" type="text" id="titre" name="titre" placeholder="<?php if (!$message) {
-                        echo "Titre de votre message";
+                </li>
+                <li>
+                    <span class="intro_span">Pour écrire un message :</span> connectez vous avec "utilisateur" ou
+                    "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à
+                    votre
+                    message avant de l'envoyer.
+                </li>
+                <li>
+                    <span class="intro_span">Pour effacer ou modifier un message :</span> connectez vous avec
+                    "administrateur" ("utilisateur n'a pas les droits nécessaires").
+                </li>
+            </ul>
+            <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
+            <!-- <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p> -->
+            <div class="d-flex justify-content-center">
+                <table class="table tableau">
+                    <thead>
+                    <tr>
+                        <th scope="col">Type d'utilisateur</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">Mot de passe</th>
+                        <th scope="col">Fonctionnalité</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Non-connecté</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>Ne peut pas poster de message</td>
+                    </tr>
+                    <tr>
+                        <td>Utilisateur classique</td>
+                        <td>user@gmail.com</td>
+                        <td>654321</td>
+                        <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
+                    </tr>
+                    <tr>
+                        <td>Administrateur</td>
+                        <td>admin@gmail.com</td>
+                        <td>123456</td>
+                        <td>Peut ajouter/modifier/supprimer un message</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex flex-row justify-content-between">
+                <a href="https://github.com/MM12300/Projet-3"><img class="logo" src="images/gitpng.png" alt="git"></a>
+                <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png"
+                                                        alt="mon site cv"></a>
+                <p class="align-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le
+                    vortex
+                    pour retourner sur mon site-CV</p>
+            </div>
+        </div>
+        <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
+        <section class="col-12" id="add-mess">
+            <div>
+                <h2><?php if (!$message) {
+                        echo "Ajouter un message";
                     } else {
-                        echo "";
+                        echo "Modifier votre message";
                     };
-                    ?>" value="<?= $title ?>">
-                </div>
-                <div class="input-group input_msg">
+                    ?></h2>
+                <!-- ----------------- ERRORS -->
+                <?php if (!empty($erreurs)) : ?>
+                    <div class="erreurs">
+                        <ul>Attention :
+                            <?php foreach ($erreurs as $erreur) : ?>
+                                <li><?= $erreur ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="input-group input_msg">
+                        <input class="form-control" type="text" id="titre" name="titre"
+                               placeholder="<?php if (!$message) {
+                                   echo "Titre de votre message";
+                               } else {
+                                   echo "";
+                               };
+                               ?>" value="<?= $title ?>">
+                    </div>
+                    <div class="input-group input_msg">
                         <textarea class="form-control" name="contenu" id="contenu" placeholder="<?php if (!$message) {
                             echo "Contenu de votre message";
                         } else {
                             echo "";
                         };
                         ?>"><?= $content ?></textarea>
-                </div>
-                <!-- IMAGE CATEGORIE ET BOUTON -->
-                <div class="d-flex flex-row justify-content-between">
-                    <!-- IMAGE -->
-                    <div class="align-self-center">
-                        <label for="image"> Image :</label>
-                        <input type="file" name="image" id="image">
                     </div>
-                    <!-- CATEGORIE  -->
-                    <div class="align-self-center">
-                        <label for="categories">Catégories</label>
-                        <select id="categories" name="categories">
-                            <option type="text" value="5">Choisir une catégorie</option>
-                            <!-- Creating a list of categories  -->
-                            <?php foreach ($categories as $categorie) : ?>
-                                <option type="text" id="<?= $categorie['id'] ?>"
-                                        value="<?= $categorie['id'] ?>" <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message['categorie_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?><?php endif ?>><?= $categorie['name'] ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <!-- BOUTONS -->
-                    <div>
-                        <button name="message" class="btn btn-success">
-                            <!-- change the button if post a new message or update an old one -->
-                            <?php if (!$message) {
-                                echo "Ajouter le message";
-                            } else {
-                                echo "Modifier le message";
-                            };
-                            ?>
-                        </button>
-                    </div>
-                </div>
-        </div>
-        </form>
-        </div>
-    </section>
-    <!-- SHOW ALL INPUTS OF `messages` -->
-    <section id="display-mess">
-        <h2 id="vosmessages">Vos messages</h2>
-        <?php foreach ($messages as $message) : ?>
-            <section class="col-12 sectionmsg">
-                <!-- BUTTONS & TITLE -->
-
-                <div class="d-flex flex-row">
-                    <?php
-                    // On vérifie si l'article a un image
-                    if ($message['featured_image'] != null) :
-                    // On a une image, on la traite et on l'affiche
-                    // On sépare le nom et l'extension
-                    $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                    $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
-
-                    // On crée le nom de l'image à afficher
-                    $image = $nom_image . '-300x300.' . $extension;
-
-                    // On affiche l'image
-                    ?>
-                    <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>"
-                                                                          alt="<?= $message['title'] ?>" <?php
-                        endif; ?>>
-                    </div>
-                    <div class="col-8 text-wrap">
-                        <div class="align-self-center d-flex flex-row justify-content-between msg-title">
-                            <h2><a><?= $message['title'] ?> </a></h2>
-                            <div class="align-self-center">
-                                <?php if (verifForm($_SESSION, ['user'])) : ?>
-                                    <a class="btn btn-warning align-self-center"
-                                       href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                                    <a class="btn btn-danger align-self-center"
-                                       href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
-                                <?php endif; ?>
-                            </div>
+                    <!-- IMAGE CATEGORIE ET BOUTON -->
+                    <div class="d-flex flex-row justify-content-between">
+                        <!-- IMAGE -->
+                        <div class="align-self-center">
+                            <label for="image"> Image :</label>
+                            <input type="file" name="image" id="image">
                         </div>
+                        <!-- CATEGORIE  -->
+                        <div class="align-self-center">
+                            <label for="categories">Catégories</label>
+                            <select id="categories" name="categories">
+                                <option type="text" value="5">Choisir une catégorie</option>
+                                <!-- Creating a list of categories  -->
+                                <?php foreach ($categories as $categorie) : ?>
+                                    <option type="text" id="<?= $categorie['id'] ?>"
+                                            value="<?= $categorie['id'] ?>" <?php if (isset($_GET['edit']) && !empty($_GET['edit'])) : ?><?php if ($message['categorie_id'] == $categorie['id']) : ?> <?= $selected ?><?php endif ?><?php endif ?>><?= $categorie['name'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <!-- BOUTONS -->
                         <div>
-                            <p class="date">
-                                <!-- DATE & CATEGORIES -->
-                                Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                                par
-                                <?php
-                                $categories = explode(',', $message['categorie_name']);
-                                //Explode : transform string into an array after each ','
-                                foreach ($categories as $categorie) {
-                                    echo '<a href="#">' . $categorie . '</a> ';
-                                }
+                            <button name="message" class="btn btn-success flashy_button">
+                                <!-- change the button if post a new message or update an old one -->
+                                <?php if (!$message) {
+                                    echo "Ajouter le message";
+                                } else {
+                                    echo "Modifier le message";
+                                };
                                 ?>
-                            </p>
-                        </div>
-                        <div class="msg-content">
-                            <?= $message['content'] ?>
+                            </button>
                         </div>
                     </div>
+            </div>
+            </form>
+        </section>
+</div>
+
+<!-- SHOW ALL INPUTS OF `messages` -->
+<section id="display-mess">
+    <h2 id="vosmessages">Vos messages</h2>
+    <?php foreach ($messages as $message) : ?>
+        <section class="col-12 sectionmsg">
+            <!-- BUTTONS & TITLE -->
+
+            <div class="d-flex flex-row">
+                <?php
+                // On vérifie si l'article a un image
+                if ($message['featured_image'] != null) :
+                // On a une image, on la traite et on l'affiche
+                // On sépare le nom et l'extension
+                $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
+
+                // On crée le nom de l'image à afficher
+                $image = $nom_image . '-300x300.' . $extension;
+
+                // On affiche l'image
+                ?>
+                <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>"
+                                                                      alt="<?= $message['title'] ?>" <?php
+                    endif; ?>>
                 </div>
-            </section>
-        <?php endforeach; ?>
-    </section>
+                <div class="col-8 text-wrap">
+                    <div class="align-self-center d-flex flex-row justify-content-between msg-title">
+                        <h3><a><?= $message['title'] ?> </a></h3>
+                        <div class="align-self-center">
+                            <?php if (verifForm($_SESSION, ['user'])) : ?>
+                                <a class="btn btn-warning align-self-center"
+                                   href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                                <a class="btn btn-danger align-self-center"
+                                   href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="date">
+                            <!-- DATE & CATEGORIES -->
+                            Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
+                            par
+                            <?php
+                            $categories = explode(',', $message['categorie_name']);
+                            //Explode : transform string into an array after each ','
+                            foreach ($categories as $categorie) {
+                                echo '<a href="#">' . $categorie . '</a> ';
+                            }
+                            ?>
+                        </p>
+                    </div>
+                    <div class="msg-content">
+                        <?= $message['content'] ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <?php endforeach; ?>
+</section>
 </main>
+</div>
 <!-- BOOTSTRAP    -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
