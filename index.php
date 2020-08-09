@@ -519,9 +519,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                                                                        alt="git"></a>
                     <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png"
                                                             alt="mon site cv"></a>
-                    <p class="align-self-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le
-                        vortex
-                        pour retourner sur mon site-CV</p>
+                    <p class="align-self-center">Retrouvez l'intégralité du code de cette page sur GitHub</p>
                 </div>
             </div>
         </div>
