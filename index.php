@@ -367,7 +367,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
           integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Josefin+Sans"/>
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Arimo"/>
     <title>C.R.U.D. One-Page</title>
 </head>
 
@@ -377,43 +377,44 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 <body class="container">
 <div id="middle">
     <!--* *************************************** TITLE -->
-    <div class="row d-flex flex-row justify-content-between w-100" id="title">
-        <h1>Projet 3 - Le C.R.U.D. one-page</h1>
-        <?php
-        if (isset($_SESSION)) : ?>
+
+    <header class="row">
+        <div class="row d-flex flex-row justify-content-between w-100" id="title">
+            <h1>Projet 3 - Le C.R.U.D. one-page</h1>
+            <?php
+            if (isset($_SESSION)) : ?>
+                <?php
+                if (verifForm($_SESSION, ['user'])) : ?>
+                    <?php
+                    $roles = json_decode($_SESSION['user']['roles']);
+                    if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
+                        <div class="alerts">
+                            <p><?= $_SESSION['user']['name'] ?> est connecté</p>
+                        </div>
+                    <?php endif ?>
+                <?php else : ?>
+                    <div class="alerts">
+                        <p>Aucun utilisateur connecté</p>
+                    </div>
+                <?php endif ?>
+            <?php endif ?>
             <?php
             if (verifForm($_SESSION, ['user'])) : ?>
                 <?php
                 $roles = json_decode($_SESSION['user']['roles']);
                 if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-                    <div class="alerts">
-                        <p><?= $_SESSION['user']['name'] ?> est connecté</p>
-                    </div>
-                <?php endif ?>
-            <?php else : ?>
-                <div class="alerts">
-                    <p>Aucun utilisateur connecté</p>
-                </div>
-            <?php endif ?>
-        <?php endif ?>
-        <?php
-        if (verifForm($_SESSION, ['user'])) : ?>
-            <?php
-            $roles = json_decode($_SESSION['user']['roles']);
-            if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-                <form method="post">
-                    <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
-                </form>
+                    <form method="post">
+                        <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
+                    </form>
 
+                <?php endif ?>
             <?php endif ?>
-        <?php endif ?>
-    </div>
-    <header class="row">
+        </div>
         <!-- -----------------WHO IS CONNECTED -------------------------->
         <?php if (empty($_SESSION)) : ?>
         <section class="col-12 d-flex flex-column" id="connect">
             <h2>Connexion</h2>
-            <form class="d-flex flex-row justify-content-between" method="post">
+            <form class="d-flex flex-row justify-content-between p-3" method="post">
                 <div class="input-group input_connect">
                     <input class="form-control" type="email" id="mail" name="mail" placeholder="E-mail">
                 </div>
@@ -426,10 +427,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     <input type="checkbox" name="remember" id="remember">
                     <label for="remember">Rester connecté(e)</label>
                 </div>
-
                 <?php endif ?>
-
-
             </form>
         </section>
         <!--* *************************************** INTRODUCTION ************************************ -->
@@ -440,14 +438,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
     <main class="row">
         <div id="intro">
             <h2>INTRODUCTION - Le C.R.U.D avec MySQL et PHP</h2>
-            <p>Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>
+            <p class="p-3 m-0">Pour illuster le <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">C.R.U.D.</a>
                 voici
                 une page qui s'apparente à une livre d'or ou à une section de commentaire comme on peut en retrouver sur
                 les sites d'e-commerce ou d'informations. L'ensemble du CRUD est réalisé en PHP sur <span
                         class="intro_span">une seule page/one-page</span>.
                 Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page
                 classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
-            <h3>Mode d'emploi : </h3>
+        </div>
+        <h2>Mode d'emploi : </h2>
+        <div class="p-3">
             <ul>
                 <li>
                     <span class="intro_span">À savoir avant de commencer </span>:
@@ -520,14 +520,15 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         </div>
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
         <section class="col-12" id="add-mess">
+            <h2><?php if (!$message) {
+                    echo "Ajouter un message";
+                } else {
+                    echo "Modifier votre message";
+                };
+                ?>
+            </h2>
+            <!-- ----------------- ERRORS -->
             <div>
-                <h2><?php if (!$message) {
-                        echo "Ajouter un message";
-                    } else {
-                        echo "Modifier votre message";
-                    };
-                    ?></h2>
-                <!-- ----------------- ERRORS -->
                 <?php if (!empty($erreurs)) : ?>
                     <div class="erreurs">
                         <ul>Attention :
@@ -587,71 +588,69 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             </button>
                         </div>
                     </div>
+                </form>
             </div>
-            </form>
         </section>
-</div>
 
-<!-- SHOW ALL INPUTS OF `messages` -->
-<section id="display-mess">
-    <h2 id="vosmessages">Vos messages</h2>
-    <?php foreach ($messages as $message) : ?>
-        <section class="col-12 sectionmsg">
-            <!-- BUTTONS & TITLE -->
+        <!-- SHOW ALL INPUTS OF `messages` -->
+        <div id="display-mess">
+            <h2 id="vosmessages">Vos messages</h2>
+            <?php foreach ($messages as $message) : ?>
+                <section class="col-12 sectionmsg">
+                    <!-- BUTTONS & TITLE -->
+                    <div class="d-flex flex-row">
+                        <?php
+                        // On vérifie si l'article a un image
+                        if ($message['featured_image'] != null) :
+                        // On a une image, on la traite et on l'affiche
+                        // On sépare le nom et l'extension
+                        $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
+                        $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
 
-            <div class="d-flex flex-row">
-                <?php
-                // On vérifie si l'article a un image
-                if ($message['featured_image'] != null) :
-                // On a une image, on la traite et on l'affiche
-                // On sépare le nom et l'extension
-                $nom_image = pathinfo($message['featured_image'], PATHINFO_FILENAME);
-                $extension = pathinfo($message['featured_image'], PATHINFO_EXTENSION);
+                        // On crée le nom de l'image à afficher
+                        $image = $nom_image . '-300x300.' . $extension;
 
-                // On crée le nom de l'image à afficher
-                $image = $nom_image . '-300x300.' . $extension;
-
-                // On affiche l'image
-                ?>
-                <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>"
-                                                                      alt="<?= $message['title'] ?>" <?php
-                    endif; ?>>
-                </div>
-                <div class="col-8 text-wrap">
-                    <div class="align-self-center d-flex flex-row justify-content-between msg-title">
-                        <h3><a><?= $message['title'] ?> </a></h3>
-                        <div class="align-self-center">
-                            <?php if (verifForm($_SESSION, ['user'])) : ?>
-                                <a class="btn btn-warning align-self-center"
-                                   href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
-                                <a class="btn btn-danger align-self-center"
-                                   href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
-                            <?php endif; ?>
+                        // On affiche l'image
+                        ?>
+                        <div class="col-4 d-flex justify-content-center"><img src="uploads/<?= $image ?>"
+                                                                              alt="<?= $message['title'] ?>" <?php
+                            endif; ?>>
+                        </div>
+                        <div class="col-8 text-wrap">
+                            <div class="align-self-center d-flex flex-row justify-content-between msg-title">
+                                <h3><a><?= $message['title'] ?> </a></h3>
+                                <div class="align-self-center">
+                                    <?php if (verifForm($_SESSION, ['user'])) : ?>
+                                        <a class="btn btn-warning align-self-center"
+                                           href="index.php?edit=<?= $message['id'] ?>">Modifier</a>
+                                        <a class="btn btn-danger align-self-center"
+                                           href="index.php?delete=<?= $message['id'] ?>">Supprimer</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="date">
+                                    <!-- DATE & CATEGORIES -->
+                                    Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
+                                    par
+                                    <?php
+                                    $categories = explode(',', $message['categorie_name']);
+                                    //Explode : transform string into an array after each ','
+                                    foreach ($categories as $categorie) {
+                                        echo '<a href="#">' . $categorie . '</a> ';
+                                    }
+                                    ?>
+                                </p>
+                            </div>
+                            <div class="msg-content">
+                                <?= $message['content'] ?>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <p class="date">
-                            <!-- DATE & CATEGORIES -->
-                            Publié le <?= date('d/m/Y à H:i:s', strtotime($message['created_at'])) ?>
-                            par
-                            <?php
-                            $categories = explode(',', $message['categorie_name']);
-                            //Explode : transform string into an array after each ','
-                            foreach ($categories as $categorie) {
-                                echo '<a href="#">' . $categorie . '</a> ';
-                            }
-                            ?>
-                        </p>
-                    </div>
-                    <div class="msg-content">
-                        <?= $message['content'] ?>
-                    </div>
-                </div>
-            </div>
-        </section>
-    <?php endforeach; ?>
-</section>
-</main>
+                </section>
+            <?php endforeach; ?>
+        </div>
+    </main>
 </div>
 <!-- BOOTSTRAP    -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
