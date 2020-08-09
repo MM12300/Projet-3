@@ -42,6 +42,10 @@ header, main, .row, .col{
 #title{
     background-color: #e5c4c4;
 }
+#banner{
+    height:20px;
+    background-color:#d6e4c8;
+}
 
 /* * ANIMATION */
 
@@ -101,7 +105,7 @@ header, main, .row, .col{
     text-align:left;
     width: 90%;
     color:black;
-    margin:0;
+    margin: 10px;
 }
 
 
@@ -195,10 +199,7 @@ header, main, .row, .col{
         background-position:20vw;
     }
 }
-#connect{
-    border-top : solid 1px white;
-    border-bottom : solid 1px white;
-}
+
 #add-mess{
     border-bottom: solid 1px white;
 }

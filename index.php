@@ -403,14 +403,16 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 <?php
                 $roles = json_decode($_SESSION['user']['roles']);
                 if (in_array('ROLE_ADMIN', $roles) || in_array('ROLE_USER', $roles)) : ?>
-                    <form method="post">
-                        <button class="btn btn-primary" name="disconnect">Me déconnecter</button>
+                    <form class="align-self-center" method="post">
+                        <button class="btn btn-primary flashy_button align-self-center mr-2" name="disconnect">Me déconnecter</button>
                     </form>
 
                 <?php endif ?>
             <?php endif ?>
         </div>
+
         <!-- -----------------WHO IS CONNECTED -------------------------->
+        <div class="w-100" id="banner"></div>
         <?php if (empty($_SESSION)) : ?>
         <section class="col-12 d-flex flex-column" id="connect">
             <h2>Connexion</h2>
@@ -429,9 +431,9 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 </div>
                 <?php endif ?>
             </form>
+
         </section>
         <!--* *************************************** INTRODUCTION ************************************ -->
-
     </header>
     <!-- MAIN = CONNECT FORM + NEW MESSAGE FORM -->
     <!-- CONNECT FORM********************************************************* -->
@@ -446,76 +448,81 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 Pas de gestion de données en AJAX et principalement du PHP-procédural (sauf pour le PDO). Mise en page
                 classique avec <a href="https://getbootstrap.com">Bootstrap</a>.</p>
         </div>
-        <h2>Mode d'emploi : </h2>
-        <div class="p-3">
-            <ul>
-                <li>
-                    <span class="intro_span">À savoir avant de commencer </span>:
-                    <ul>
-                        <li>
-                            Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence j'ai
-                            crée
-                            deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous
-                            pouvez
-                            trouver dans le tableau ci-dessous.
-                        </li>
-                        <li>
-                            Ajoutez une image au format carré pour accompagner votre message.
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <span class="intro_span">Pour écrire un message :</span> connectez vous avec "utilisateur" ou
-                    "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence) à
-                    votre
-                    message avant de l'envoyer.
-                </li>
-                <li>
-                    <span class="intro_span">Pour effacer ou modifier un message :</span> connectez vous avec
-                    "administrateur" ("utilisateur n'a pas les droits nécessaires").
-                </li>
-            </ul>
-            <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
-            <!-- <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p> -->
-            <div class="d-flex justify-content-center">
-                <table class="table tableau">
-                    <thead>
-                    <tr>
-                        <th scope="col">Type d'utilisateur</th>
-                        <th scope="col">E-mail</th>
-                        <th scope="col">Mot de passe</th>
-                        <th scope="col">Fonctionnalité</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Non-connecté</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>Ne peut pas poster de message</td>
-                    </tr>
-                    <tr>
-                        <td>Utilisateur classique</td>
-                        <td>user@gmail.com</td>
-                        <td>654321</td>
-                        <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
-                    </tr>
-                    <tr>
-                        <td>Administrateur</td>
-                        <td>admin@gmail.com</td>
-                        <td>123456</td>
-                        <td>Peut ajouter/modifier/supprimer un message</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex flex-row justify-content-between">
-                <a href="https://github.com/MM12300/Projet-3"><img class="logo" src="images/gitpng.png" alt="git"></a>
-                <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png"
-                                                        alt="mon site cv"></a>
-                <p class="align-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le
-                    vortex
-                    pour retourner sur mon site-CV</p>
+        <div class = "col-12">
+            <h2>Mode d'emploi : </h2>
+            <div class="p-3">
+                <ul>
+                    <li>
+                        <span class="intro_span">À savoir avant de commencer </span>:
+                        <ul>
+                            <li>
+                                Pour faciler l'utilisation de cette page, il n'y a pas d'inscription. En conséquence
+                                j'ai
+                                crée
+                                deux comptes : "utilisateur" et "administrateur", qui ont des droits différents que vous
+                                pouvez
+                                trouver dans le tableau ci-dessous.
+                            </li>
+                            <li>
+                                Ajoutez une image au format carré pour accompagner votre message.
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <span class="intro_span">Pour écrire un message :</span> connectez vous avec "utilisateur" ou
+                        "administrateur". Donnez un titre, un contenu, une catégorie et une image (carré de préférence)
+                        à
+                        votre
+                        message avant de l'envoyer.
+                    </li>
+                    <li>
+                        <span class="intro_span">Pour effacer ou modifier un message :</span> connectez vous avec
+                        "administrateur" ("utilisateur n'a pas les droits nécessaires").
+                    </li>
+                </ul>
+                <!-- <p>Mode d'emploi : Utilisez les identifiants présents dans le tableau ci-dessous pour tester les fonctionnalités d'ajout, de modification et de supression de message.</p> -->
+                <!-- <p>Ici j'ai voulu faciliter l'utilisation de cette page en vous évitant de devoir créer un compte. Bien entendu sur un site en production, on évitera de donner des identifiants. </p> -->
+                <div class="d-flex justify-content-center">
+                    <table class="table tableau">
+                        <thead>
+                        <tr>
+                            <th scope="col">Type d'utilisateur</th>
+                            <th scope="col">E-mail</th>
+                            <th scope="col">Mot de passe</th>
+                            <th scope="col">Fonctionnalité</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Non-connecté</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>Ne peut pas poster de message</td>
+                        </tr>
+                        <tr>
+                            <td>Utilisateur classique</td>
+                            <td>user@gmail.com</td>
+                            <td>654321</td>
+                            <td>Peut ajouter un message (affiche les boutons modifier/supprimer)</td>
+                        </tr>
+                        <tr>
+                            <td>Administrateur</td>
+                            <td>admin@gmail.com</td>
+                            <td>123456</td>
+                            <td>Peut ajouter/modifier/supprimer un message</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex flex-row justify-content-between">
+                    <a href="https://github.com/MM12300/Projet-3"><img class="logo" src="images/gitpng.png"
+                                                                       alt="git"></a>
+                    <a href="http://cv.matthieu-m.com"><img class="logo" id="vortex" src="images/vortexpng.png"
+                                                            alt="mon site cv"></a>
+                    <p class="align-self-center">Retrouvez l'intégralité du code de cette page sur GitHub, ou bien suivez le
+                        vortex
+                        pour retourner sur mon site-CV</p>
+                </div>
             </div>
         </div>
         <!-- NEW MESSAGE FORM ***************************************    Input to  `messages` -->
@@ -528,7 +535,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                 ?>
             </h2>
             <!-- ----------------- ERRORS -->
-            <div>
+            <div class="p-3">
                 <?php if (!empty($erreurs)) : ?>
                     <div class="erreurs">
                         <ul>Attention :
