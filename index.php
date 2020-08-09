@@ -190,8 +190,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                             $id = strip_tags($_GET['edit']);
                             $categorie = strip_tags($_POST['categories']);
                             //***CONDITION : content should be 30chars minimum
-                            if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
-                                $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
+                            if ((strlen($contenu) < 30) || (strlen($contenu) > 500)) {
+                                $erreurs[] = "Le contenu du message doit contenir entre 30 et 500 caractères";
                             }
 
                             //***CONDITION : content should be 30chars minimum
@@ -286,8 +286,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                     $categorie = strip_tags($_POST['categories']);
 
                     //***CONDITION : content should be 30chars minimum
-                    if ((strlen($contenu) < 30) || (strlen($contenu) > 100)) {
-                        $erreurs[] = "Le contenu du message doit contenir entre 30 et 100 caractères";
+                    if ((strlen($contenu) < 30) || (strlen($contenu) > 500)) {
+                        $erreurs[] = "Le contenu du message doit contenir entre 30 et 500 caractères";
                     }
 
                     //***CONDITION : content should be 30chars minimum
@@ -603,7 +603,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
         <div id="display-mess">
             <h2 id="vosmessages">Vos messages</h2>
             <?php foreach ($messages as $message) : ?>
-                <section class="col-12 sectionmsg">
+                <section class="col-12 sectionmsg p-3">
                     <!-- BUTTONS & TITLE -->
                     <div class="d-flex flex-row">
                         <?php
@@ -625,7 +625,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
                         </div>
                         <div class="col-8 text-wrap">
                             <div class="align-self-center d-flex flex-row justify-content-between msg-title">
-                                <h3><a><?= $message['title'] ?> </a></h3>
+                                <h4 class="text-uppercase"><a><?= $message['title'] ?> </a></h4>
                                 <div class="align-self-center">
                                     <?php if (verifForm($_SESSION, ['user'])) : ?>
                                         <a class="btn btn-warning align-self-center"

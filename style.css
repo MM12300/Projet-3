@@ -26,6 +26,9 @@ h3{
     background-color : #e5c4c4;
     margin:0;
 }
+h4{
+    font-size:1.8rem !important;
+}
 img{
     width:250px;
 }
