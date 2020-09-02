@@ -19,7 +19,7 @@ $selected = '';
 //SESSION
 
 //DB OPEN
-require_once('inc/connect.php');
+require_once('inc/connect_online.php');
 //functions library loading
 require_once('inc/lib.php');
 
